@@ -25,12 +25,14 @@ void uart_init() {
     GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P1, GPIO_PIN1);
     GPIO_setAsPeripheralModuleFunctionInputPin (GPIO_PORT_P1, GPIO_PIN2);
     USCI_A_UART_initParam  params =
-    { // 24 MHz, 38400, 8N1
-     .selectClockSource = USCI_A_UART_CLOCKSOURCE_SMCLK,
-     .clockPrescalar = 39,
-     .firstModReg = 1,
+    {
+      // 8 MHz, 38400, 8N1
+      //
+     .selectClockSource = USCI_A_UART_CLOCKSOURCE_ACLK,
+     .clockPrescalar = 26,
+     .firstModReg = 0,
      .secondModReg = 0,
-     .overSampling = 1,
+     .overSampling = 0,
      .parity = USCI_A_UART_NO_PARITY,
      .msborLsbFirst = USCI_A_UART_LSB_FIRST,
      .numberofStopBits = USCI_A_UART_ONE_STOP_BIT,
@@ -40,8 +42,8 @@ void uart_init() {
     if ( STATUS_FAIL == USCI_A_UART_init ( USCI_A0_BASE, &params )) {
         return;
     }
-    USCI_A_UART_enableInterrupt (USCI_A0_BASE, USCI_A_UART_RECEIVE_INTERRUPT);
     USCI_A_UART_enable(USCI_A0_BASE);
+    USCI_A_UART_enableInterrupt (USCI_A0_BASE, USCI_A_UART_RECEIVE_INTERRUPT | USCI_A_UART_TRANSMIT_INTERRUPT); // Interrupt can't be enabled before enable is called...
     tx_rb.head = 0;
     tx_rb.tail = 0;
     tx_rb.buf = txbuf;

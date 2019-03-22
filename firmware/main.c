@@ -6,6 +6,10 @@
 // PWMA is TD0.0
 volatile uint16_t cv = WMIN;
 
+// XT1 is 8MHz
+// DCOCLKDIV (FLL) is XT1*3=24MHz
+// SMCLK is (DCOCLKDIV/1) = 24 MHz (timer_d)
+// ACLK is (XT1) = 8 MHz
 void main(void)
 {
     WDT_A_hold(WDT_A_BASE);
@@ -25,13 +29,22 @@ void main(void)
           		  GPIO_PORT_PJ,
           		  GPIO_PIN4 + GPIO_PIN5
           		  );
+    UCS_setExternalClockSource(8000000,0);
 
-    UCS_turnOnHFXT1(UCS_XT1_DRIVE_1);
-
+    UCS_turnOnHFXT1(UCS_XT1_DRIVE_2);
+    // FLLREFDIV = 1
+    // UCSCLT1: DCORSEL=6 (range)
+    // UCSCLT2: FLLD=000b/Div1 ; FLLN=3
+    // UCSCTL3: SELREF=000b/XT1CLK; FLLREFDIV=000/Div1
+    UCS_initClockSignal(UCS_FLLREF, UCS_XT1CLK_SELECT, UCS_CLOCK_DIVIDER_2);
 
     // Initialize DCO to 12MHz
     UCS_initFLLSettle(24000,
-                  3);
+                  6);
+
+    UCS_initClockSignal(UCS_MCLK, UCS_DCOCLKDIV_SELECT, UCS_CLOCK_DIVIDER_2);
+    UCS_initClockSignal(UCS_SMCLK, UCS_DCOCLK_SELECT, UCS_CLOCK_DIVIDER_1);
+    UCS_initClockSignal(UCS_ACLK, UCS_DCOCLKDIV_SELECT, UCS_CLOCK_DIVIDER_8); // 1.5 MHz for USCI
 
     Timer_D_initHighResGeneratorInRegulatedModeParam td_reg_params =
         {
@@ -51,6 +64,16 @@ void main(void)
 
     uart_init();
     pwm_init();
+    // Enable interrupts!
+    __enable_interrupt();
+    while(true) {
+        __delay_cycles(1000000);
+        //uint8_t *str = "Blah\n";
+        uint32_t x = UCS_getSMCLK();
+        uart_write((uint8_t*)&x, 4);
+        x = UCS_getACLK();
+        uart_write((uint8_t*)&x, 4);
+    }
 
     __bis_SR_register(LPM0_bits + GIE);       // Enter LPM0
     __no_operation();                         // For debugger
@@ -109,5 +132,6 @@ void TIMER0_D1_ISR(void)
     default: break;
     }
 }
+
 
 
