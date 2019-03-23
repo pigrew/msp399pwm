@@ -6,6 +6,7 @@
 // also, size MUST be a power of two!
 
 // Get element, returns 1 on failure, 0 on success.
+__attribute__((ramfunc))
 uint8_t rb_get(struct ring_buffer *rb, uint8_t *d) {
     if(rb->head == rb->tail) { // no data
         // Empty buffer
@@ -15,7 +16,7 @@ uint8_t rb_get(struct ring_buffer *rb, uint8_t *d) {
     rb->tail = rb->tail + 1;
     return 0;
 }
-
+__attribute__((ramfunc))
 uint8_t rb_put(struct ring_buffer *rb, uint8_t d) {
     if((rb->head - rb->tail) == rb->n_elem) // full
         return 1;
@@ -23,6 +24,7 @@ uint8_t rb_put(struct ring_buffer *rb, uint8_t d) {
     rb->head++;
     return 0;
 }
+__attribute__((ramfunc))
 bool rb_empty(struct ring_buffer *rb) {
     return rb->tail == rb->head;
 }
