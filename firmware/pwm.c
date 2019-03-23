@@ -15,8 +15,9 @@
 static uint16_t g_period; // period as set over UART
 static uint32_t g_ratio; // ratio as set over UART
 
-static volatile uint16_t pwmA_base;
-static volatile uint32_t pwmA_fraction;
+static volatile uint16_t pwmA_base;     // touched by ISR and user code,
+static volatile uint32_t pwmA_fraction; // touched by ISR and user code, must disable interrupts before changing.
+static uint32_t pwmA_fraction_sigma;    // only touched by ISR, so no need for volatile.
 
 static volatile uint16_t cv = WMIN;
 
@@ -69,7 +70,7 @@ void pwm_init() {
     // Configure the CCRx blocks
 
     // Setup TD0CCR0: (interrupt enable) | (reset-set mode)  | (latch when timer0 goes to 0) |
-    TD0CCTL0 =      OUTMOD_4 ;//| CCIE ;//            | OUTMOD_4          | CLLD_1; // Toggle, just for fun
+    TD0CCTL0 =      OUTMOD_4 | CCIE ;//            | OUTMOD_4          | CLLD_1; // Toggle, just for fun
     TD0CCTL1 =        OUTMOD_7; // 0                | OUTMOD_7          | CLLD_1;
     TD0CCTL2 = OUTMOD_5;
     // To get divisor, take CCR0, round down to 4, add 4.
@@ -110,7 +111,7 @@ static void pwm_applyRatio(uint16_t period) {
     uint32_t actualBase = (((double)pwmA_base)/ ((double)period))*MAX_32_D;
 
     r = ((double)(g_ratio - actualBase)) * ((double)period); // remainder
-    pwmA_fraction = (uint32_t)r;
+    pwmA_fraction = ((uint32_t)(r))>>2;  // shift right two bits to make room for accumulators in delta-sigma method
 
     TD0CCR1 = pwmA_base;
     TD0CL1 = pwmA_base;
@@ -122,12 +123,22 @@ void pwm_setRatio(uint32_t ratio) {
     pwm_applyRatio(g_period);
 }
 
+
+// delta-sigma modulator, see http://www.ti.com/lit/an/slyt076/slyt076.pdf
+#define DS_N (30)
 #pragma vector=TIMER0_D0_VECTOR
 __interrupt
 void TIMER0_D0_ISR(void)
 {
+    uint32_t delta = (pwmA_fraction_sigma & (1ul<<(DS_N-1))) ? (3ul << DS_N)  : 0;
+    uint32_t delta_out = pwmA_fraction + delta;
+    uint32_t sigma_out = delta_out + pwmA_fraction_sigma;
+    pwmA_fraction_sigma = sigma_out;
+    if((pwmA_fraction_sigma & (1ul<<(DS_N-1))))
+        TD0CCR1 = pwmA_base + 1;
+    else
+        TD0CCR1 = pwmA_base;
 
-    TD0CCR1 = pwmA_base;
 }
 
 // Timer0_D1 Interrupt Vector (TDIV) handler
