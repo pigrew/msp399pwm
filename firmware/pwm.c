@@ -111,7 +111,10 @@ static void pwm_applyRatio(uint16_t period) {
     uint32_t actualBase = (((double)pwmA_base)/ ((double)period))*MAX_32_D;
 
     r = ((double)(g_ratio - actualBase)) * ((double)period); // remainder
+
+    __disable_interrupt();
     pwmA_fraction = ((uint32_t)(r))>>2;  // shift right two bits to make room for accumulators in delta-sigma method
+    __enable_interrupt();
 
     TD0CCR1 = pwmA_base;
     TD0CL1 = pwmA_base;
