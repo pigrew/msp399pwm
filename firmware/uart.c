@@ -77,6 +77,21 @@ uint8_t uart_write(uint8_t *data, size_t len) {
     }
     return r;
 }
+static uint8_t baseFourChar(uint8_t baseFour) {
+    baseFour = baseFour & 0x0F;
+    if(baseFour < 10)
+        return '0' + baseFour;
+    return 'A' + baseFour - 10;
+}
+// Convert 16-bit hex to string.
+// Does not append NULL.
+void u16hex(uint32_t value, char* result, uint8_t bits) {
+    uint8_t i = 0;
+    for( ; bits>0 ; bits-=4) {
+        result[i++] = baseFourChar(value >> (bits-4));
+    }
+    return;
+}
 
 #pragma vector=USCI_A0_VECTOR
 __interrupt

@@ -85,6 +85,9 @@ void pwm_setPeriod(uint16_t period) {
 
 }
 
+void pwm_setRatio(uint32_t ratio) {
+}
+
 
 #pragma vector=TIMER0_D0_VECTOR
 __interrupt

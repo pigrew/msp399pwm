@@ -10,5 +10,4 @@
 
 void processCmds();
 
-
 #endif /* CMD_H_ */

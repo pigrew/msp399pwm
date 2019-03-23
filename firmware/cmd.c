@@ -41,6 +41,15 @@ void processCmds() {
             if(d32 > 0)
                 pwm_setPeriod((uint16_t)d32);
             break;
+        case 'r': // Set PWM ratio
+        case 'R':
+            d32 = strtoul((char*)&(rxbuf[1]), NULL, 0);
+            if(d32 > 0)
+                pwm_setRatio(d32);
+            break;
+        default:
+            uart_write("ERROR\n", 6);
+            break;
     }
 
 end:

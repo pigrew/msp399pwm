@@ -17,6 +17,8 @@
 extern volatile size_t rxBufLen;
 extern uint8_t rxbuf[RXBUF_SIZE + 1]; // room for NULL byte
 extern volatile bool cmdComplete;
+void itoa(long unsigned int value, char* result, int base);
+void u16hex(uint32_t value, char* result, uint8_t bits);
 
 void uart_init();
 uint8_t uart_putc(uint8_t c);

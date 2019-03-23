@@ -1,6 +1,11 @@
-Command listing
+Command listing:
+
+(UART is 57600 Hz)
+
+Error handling is pretty weak. It shouldn't crash, but it'll be easy to confuse it.
 
 t0: disable temperature reporting
 t1: enable temperature reporting
 
-p[#]: Set period to some number of cycles. # may be in decimal, octal (start with 0), or hex (start with 0x)
+p[16-bit #]: Set period to some number of cycles. # may be in decimal, octal (start with 0), or hex (start with 0x). Should be a multiple of 8, and at least 16
+r[32-bit #]: Set duty cycle to some number of cycles. # may be in decimal, octal (start with 0), or hex (start with 0x)
