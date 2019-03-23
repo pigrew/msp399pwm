@@ -72,7 +72,7 @@ void main(void)
             uart_write(",", 1);
             u16hex(rt,(char*)str,16);
             uart_write(str, 4);
-            uart_write("\r",1);
+            uart_write("\n",1);
         }
     }
 
