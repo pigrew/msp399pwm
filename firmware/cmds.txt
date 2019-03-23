@@ -1,0 +1,6 @@
+Command listing
+
+t0: disable temperature reporting
+t1: enable temperature reporting
+
+p[#]: Set period to some number of cycles. # may be in decimal, octal (start with 0), or hex (start with 0x)

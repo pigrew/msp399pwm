@@ -9,6 +9,6 @@
 #define PWM_H_
 
 void pwm_init();
-
+void pwm_setPeriod(uint16_t period);
 
 #endif /* PWM_H_ */

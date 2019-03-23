@@ -15,7 +15,7 @@
 
 volatile bool cmdComplete = false;
 volatile size_t rxBufLen = 0;
-uint8_t rxbuf[RXBUF_SIZE];
+uint8_t rxbuf[RXBUF_SIZE+1]; // leave a spot for a null terminator
 
 volatile bool tx_active = false;
 uint8_t txbuf[TXBUF_SIZE];

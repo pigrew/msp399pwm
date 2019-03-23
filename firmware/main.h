@@ -16,7 +16,7 @@
 #define WMAX 0x6a66
 
 #ifdef START_XTAL
-#define PERIOD 0x9800
+#define PERIOD 0x9540
 #else
 #define PERIOD 0x6000
 #endif
