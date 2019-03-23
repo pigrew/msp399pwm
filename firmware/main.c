@@ -14,7 +14,7 @@ bool reportTemps = false;
 // SMCLK is (DCOCLKDIV/1) = 24 MHz (timer_d)
 // ACLK is (XT1) = 8 MHz
 void main(void)
-{
+    {
     WDT_A_hold(WDT_A_BASE);
 
     // Configure XT1

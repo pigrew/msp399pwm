@@ -12,9 +12,21 @@
 #include "main.h"
 
 // PWMA is TD0.0
-volatile uint16_t cv = WMIN;
+static uint16_t g_period; // period as set over UART
+static uint32_t g_ratio; // ratio as set over UART
+
+static volatile uint16_t pwmA_base;
+static volatile uint32_t pwmA_fraction;
+
+static volatile uint16_t cv = WMIN;
+
+static void pwm_applyRatio();
 
 void pwm_init() {
+    g_period = PERIOD;
+    g_ratio = 0xc0000000;
+
+
 #ifdef START_XTAL
     Timer_D_initHighResGeneratorInRegulatedModeParam td_reg_params =
         {
@@ -57,7 +69,7 @@ void pwm_init() {
     // Configure the CCRx blocks
 
     // Setup TD0CCR0: (interrupt enable) | (reset-set mode)  | (latch when timer0 goes to 0) |
-    TD0CCTL0 =      OUTMOD_4 | CCIE ;//            | OUTMOD_4          | CLLD_1; // Toggle, just for fun
+    TD0CCTL0 =      OUTMOD_4 ;//| CCIE ;//            | OUTMOD_4          | CLLD_1; // Toggle, just for fun
     TD0CCTL1 =        OUTMOD_7; // 0                | OUTMOD_7          | CLLD_1;
     TD0CCTL2 = OUTMOD_5;
     // To get divisor, take CCR0, round down to 4, add 4.
@@ -78,25 +90,44 @@ void pwm_init() {
 void pwm_setPeriod(uint16_t period) {
     if(period < 16)
         period = 16; // minimum
-    TD0CCR0 = period;
     // CCR1 may not immediately load, so try to load it manually?
-    TD0CCR1 = 0.7*period;
-    TD0CL1 = 0.7*period;
+    // Recalculate and reapply ratio
+    if(period < g_period) { // reducing period
+        pwm_applyRatio(period);
+        TD0CCR0 = period;
+    } else {
+        TD0CCR0 = period;
+        pwm_applyRatio(period);
+    }
+    g_period = period;
+}
+#define MAX_32_D ((double)4294967295.0)
+static void pwm_applyRatio(uint16_t period) {
+    // float is only 24-bit, so we need double-precision if using floating-point for math.
+    double r = ((double)g_ratio)/MAX_32_D;
+    double high = r*period;
+    pwmA_base = (uint16_t)high;
+    uint32_t actualBase = (((double)pwmA_base)/ ((double)period))*MAX_32_D;
+
+    r = ((double)(g_ratio - actualBase)) * ((double)period); // remainder
+    pwmA_fraction = (uint32_t)r;
+
+    TD0CCR1 = pwmA_base;
+    TD0CL1 = pwmA_base;
 
 }
 
 void pwm_setRatio(uint32_t ratio) {
+    g_ratio = ratio;
+    pwm_applyRatio(g_period);
 }
-
 
 #pragma vector=TIMER0_D0_VECTOR
 __interrupt
 void TIMER0_D0_ISR(void)
 {
-   /* cv = cv + 1;
-    if(cv > WMAX)
-       cv = WMIN;
-    TD0CCR1 = cv;*/
+
+    TD0CCR1 = pwmA_base;
 }
 
 // Timer0_D1 Interrupt Vector (TDIV) handler
