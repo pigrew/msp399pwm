@@ -2,6 +2,7 @@
 #include "uart.h"
 #include "pwm.h"
 #include "main.h"
+#include "tmp411.h"
 
 // PWMA is TD0.0
 volatile uint16_t cv = WMIN;
@@ -64,15 +65,16 @@ void main(void)
 
     uart_init();
     pwm_init();
+    tmp411_init();
     // Enable interrupts!
     __enable_interrupt();
     while(true) {
-        __delay_cycles(1000000);
+        __delay_cycles(100000);
         //uint8_t *str = "Blah\n";
-        uint32_t x = UCS_getSMCLK();
-        uart_write((uint8_t*)&x, 4);
-        x = UCS_getACLK();
-        uart_write((uint8_t*)&x, 4);
+        uint16_t lt = tmp411_getLocal();
+        uint16_t rt = tmp411_getRemote();
+        uart_write((uint8_t*)&lt, 2);
+        uart_write((uint8_t*)&rt, 2);
     }
 
     __bis_SR_register(LPM0_bits + GIE);       // Enter LPM0
