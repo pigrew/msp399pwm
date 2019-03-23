@@ -8,12 +8,12 @@
 #include <stdlib.h>
 #include "driverlib.h"
 #include "ring_buffer.h"
+#include "uart.h"
 
-#define RXBUF_SIZE 20
 // TB RB size must be power of 2
 #define TXBUF_SIZE 32
 
-volatile bool cmdComplete;
+volatile bool cmdComplete = false;
 volatile size_t rxBufLen = 0;
 uint8_t rxbuf[RXBUF_SIZE];
 
@@ -85,15 +85,24 @@ void USCI_A0_ISR(void) {
     switch(__even_in_range(UCA0IV,4))  {
     // Vector 2 - RXIFG
     case USCI_UCRXIFG:
-        if(cmdComplete) // Can't receive before buffer handled!
-            break;
 
         d = USCI_A_UART_receiveData(USCI_A0_BASE);
+        if(cmdComplete) // disregard if previous CMD has not been handled
+            return;
 
         if(rxBufLen < RXBUF_SIZE)
             rxbuf[rxBufLen++] = d;
         else
             rxBufLen = 0; /* Overflow, clear buffer */
+
+        if(d == '\n' || d == '\r') {
+            if(rxBufLen == 1) {
+                rxBufLen = 0;
+            } else {
+                // Line complete
+                cmdComplete = true;
+            }
+        }
         break;
     case USCI_UCTXIFG:
         // tx_active must be true

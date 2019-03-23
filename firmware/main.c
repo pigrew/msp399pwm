@@ -2,7 +2,11 @@
 #include "uart.h"
 #include "pwm.h"
 #include "main.h"
+#include "cmd.h"
 #include "tmp411.h"
+
+// globals!
+bool reportTemps = false;
 
 // PWMA is TD0.0
 volatile uint16_t cv = WMIN;
@@ -70,11 +74,14 @@ void main(void)
     __enable_interrupt();
     while(true) {
         __delay_cycles(100000);
+        processCmds();
         //uint8_t *str = "Blah\n";
         uint16_t lt = tmp411_getLocal();
         uint16_t rt = tmp411_getRemote();
-        uart_write((uint8_t*)&lt, 2);
-        uart_write((uint8_t*)&rt, 2);
+        if(reportTemps) {
+            uart_write((uint8_t*)&lt, 2);
+            uart_write((uint8_t*)&rt, 2);
+        }
     }
 
     __bis_SR_register(LPM0_bits + GIE);       // Enter LPM0

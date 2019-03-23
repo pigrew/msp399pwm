@@ -8,6 +8,7 @@
 #ifndef MAIN_H_
 #define MAIN_H_
 
+#include <stdbool.h>
 
 #define START_XTAL
 
@@ -19,5 +20,8 @@
 #else
 #define PERIOD 0x6000
 #endif
+
+
+extern bool reportTemps;
 
 #endif /* MAIN_H_ */
