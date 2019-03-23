@@ -13,6 +13,7 @@
 
 void processCmds() {
     uint32_t d32;
+    uint8_t rsp = 0; // 0 is success
 
     if(!cmdComplete)
         return;
@@ -48,11 +49,20 @@ void processCmds() {
                 pwm_setRatio(d32);
             break;
         default:
-            uart_write("ERROR\n", 6);
+            rsp = 1;
             break;
     }
 
 end:
+    switch(rsp) {
+    case 0:
+        uart_write("OK\n", 3);
+        break;
+    case 1:
+    default:
+        uart_write("ERROR\n", 6);
+        break;
+    }
     rxBufLen = 0;
     cmdComplete = false;
     return;
