@@ -12,6 +12,10 @@
 
 #define START_XTAL
 
+#define ACLK_RATE (1500000ul)
+
+#define TICK_RATE (1000u)
+
 #define WMIN 0x6a66
 #define WMAX 0x6a66
 
@@ -21,7 +25,6 @@
 #define PERIOD 0x6000
 #endif
 
-
-extern bool reportTemps;
+void main_set_tempReport(bool enabled);
 
 #endif /* MAIN_H_ */

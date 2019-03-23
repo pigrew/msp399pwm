@@ -116,6 +116,7 @@ void USCI_A0_ISR(void) {
             } else {
                 // Line complete
                 cmdComplete = true;
+                __bic_SR_register_on_exit (LPM0_bits);
             }
         }
         break;

@@ -4,9 +4,12 @@
 #include "main.h"
 #include "cmd.h"
 #include "tmp411.h"
+#include "systick.h"
 #include <string.h>
+
 // globals!
-bool reportTemps = false;
+static bool g_tempReport = false;
+static uint16_t g_lastTempTick = 0;
 
 
 // XT1 is 8MHz
@@ -57,26 +60,42 @@ void main(void)
     uart_init();
     pwm_init();
     tmp411_init();
+    systick_init();
+
+    g_lastTempTick = 0;
+
     // Enable interrupts!
     __enable_interrupt();
     while(true) {
-        __delay_cycles(1000000);
+        uint16_t now = systick_get();
         processCmds();
-        uint8_t str[8];
-        uint16_t lt = tmp411_getLocal();
-        uint16_t rt = tmp411_getRemote();
-        if(reportTemps) {
-            uart_write("T",1);
-            u16hex(lt,(char*)str,16);
-            uart_write(str, 4);
-            uart_write(",", 1);
-            u16hex(rt,(char*)str,16);
-            uart_write(str, 4);
-            uart_write("\n",1);
-        }
-    }
 
-    __bis_SR_register(LPM0_bits + GIE);       // Enter LPM0
-    __no_operation();                         // For debugger
+        // get temperature every second
+        if((now-g_lastTempTick) > 1000) {
+            uint8_t str[8];
+            uint16_t lt = tmp411_getLocal();
+            uint16_t rt = tmp411_getRemote();
+            if(g_tempReport) {
+                uart_write("T",1);
+                u16hex(lt,(char*)str,16);
+                uart_write(str, 4);
+                uart_write(",", 1);
+                u16hex(rt,(char*)str,16);
+                uart_write(str, 4);
+                uart_write("\n",1);
+            }
+
+            g_lastTempTick += 1000;
+            //  !(in next 1000 ticks )                && more than 1000 ago
+            if( (g_lastTempTick + 1000 - now <= 1000) && ((now - g_lastTempTick) > 1000)) // too long ago, reset timer.
+                g_lastTempTick = now;
+        }
+        __bis_SR_register(LPM0_bits);       // Enter LPM0
+        __no_operation();                         // For debugger
+    }
 }
 
+void main_set_tempReport(bool enabled) {
+    g_lastTempTick = systick_get();
+    g_tempReport = enabled;
+}

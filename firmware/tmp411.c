@@ -8,7 +8,11 @@
 #define TMP411_ADDR 0x4c
 
 #include <stdlib.h>
+#include <stdint.h>
+#include <msp430.h>
+
 #include "driverlib.h"
+
 
 #define I2C_BASE USCI_B0_BASE
 

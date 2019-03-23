@@ -29,10 +29,10 @@ void processCmds() {
                 goto end;
             switch(rxbuf[1]) {
             case '0':
-                reportTemps = false;
+                main_set_tempReport(false);
                 break;
             case '1':
-                reportTemps = true;
+                main_set_tempReport(true);
                 break;
             }
             break;
