@@ -4,7 +4,7 @@
 #include "main.h"
 #include "cmd.h"
 #include "tmp411.h"
-
+#include <string.h>
 // globals!
 bool reportTemps = false;
 
@@ -60,14 +60,19 @@ void main(void)
     // Enable interrupts!
     __enable_interrupt();
     while(true) {
-        __delay_cycles(100000);
+        __delay_cycles(1000000);
         processCmds();
-        //uint8_t *str = "Blah\n";
+        uint8_t str[8];
         uint16_t lt = tmp411_getLocal();
         uint16_t rt = tmp411_getRemote();
         if(reportTemps) {
-            uart_write((uint8_t*)&lt, 2);
-            uart_write((uint8_t*)&rt, 2);
+            uart_write("T",1);
+            u16hex(lt,(char*)str,16);
+            uart_write(str, 4);
+            uart_write(",", 1);
+            u16hex(rt,(char*)str,16);
+            uart_write(str, 4);
+            uart_write("\r",1);
         }
     }
 
