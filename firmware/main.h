@@ -12,18 +12,13 @@
 
 #define START_XTAL
 
+#define XTAL_RATE (8000000ul)
+
+#define FLLREF_RATE (4000000ul)
+#define DCO_RATE (24000000ul)
 #define ACLK_RATE (1500000ul)
 
 #define TICK_RATE (1000u)
-
-#define WMIN 0x6a66
-#define WMAX 0x6a66
-
-#ifdef START_XTAL
-#define PERIOD 0x9540
-#else
-#define PERIOD 0x6000
-#endif
 
 void main_set_tempReport(bool enabled);
 

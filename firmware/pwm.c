@@ -11,6 +11,8 @@
 #include "pwm.h"
 #include "main.h"
 
+#define DISCIPLINED
+
 // PWMA is TD0.0
 static uint16_t g_period; // period as set over UART
 static uint32_t g_ratio; // ratio as set over UART
@@ -19,16 +21,13 @@ static volatile uint16_t pwmA_base;     // touched by ISR and user code,
 static volatile uint32_t pwmA_fraction; // touched by ISR and user code, must disable interrupts before changing.
 static uint32_t pwmA_fraction_sigma;    // only touched by ISR, so no need for volatile.
 
-static volatile uint16_t cv = WMIN;
-
 static void pwm_applyRatio();
 
 void pwm_init() {
-    g_period = PERIOD;
-    g_ratio = 0xc0000000;
+    g_period = 0x9600;    // 100 kHz
+    g_ratio = 0xc0000000; // 0.75
 
-
-#ifdef START_XTAL
+#ifdef DISCIPLINED
     Timer_D_initHighResGeneratorInRegulatedModeParam td_reg_params =
         {
          .clockingMode = TIMER_D_CLOCKINGMODE_HIRES_LOCAL_CLOCK,
@@ -74,8 +73,8 @@ void pwm_init() {
     TD0CCTL1 =        OUTMOD_7; // 0                | OUTMOD_7          | CLLD_1;
     TD0CCTL2 = OUTMOD_5;
     // To get divisor, take CCR0, round down to 4, add 4.
-    TD0CCR0 = PERIOD;
-    TD0CCR1 = WMIN;
+    TD0CCR0 = g_period;
+    pwm_setRatio(g_ratio);
 
     TD0CTL1 |= TDCLKM__HIGHRES;
     TD0CTL1 &= ~TD2CMB; // don't combine CCR1 and CCR2

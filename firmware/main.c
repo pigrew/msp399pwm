@@ -44,17 +44,22 @@ void main(void)
     // UCSCTL3: SELREF=000b/XT1CLK; FLLREFDIV=000/Div1
     UCS_initClockSignal(UCS_FLLREF, UCS_XT1CLK_SELECT, UCS_CLOCK_DIVIDER_2);
 
-    // Initialize DCO to 12MHz
-    UCS_initFLLSettle(24000,
-                  6);
+    // Initialize DCO to 24MHz
+    UCS_initFLLSettle(DCO_RATE/1000ul, DCO_RATE/FLLREF_RATE);
+#else
+    // FLLREFDIV = 1
+    // UCSCLT1: DCORSEL=6 (range)
+    // UCSCLT2: FLLD=000b/Div1 ; FLLN=3
+    // UCSCTL3: SELREF=000b/XT1CLK; FLLREFDIV=000/Div1
+    UCS_initClockSignal(UCS_FLLREF, UCS_REFOCLK_SELECT, UCS_CLOCK_DIVIDER_2);
+
+    // Initialize DCO to 24MHz
+    UCS_initFLLSettle(DCO_RATE/1000ul, DCO_RATE/32768);
+#endif
 
     UCS_initClockSignal(UCS_MCLK, UCS_DCOCLKDIV_SELECT, UCS_CLOCK_DIVIDER_2);
     UCS_initClockSignal(UCS_SMCLK, UCS_DCOCLK_SELECT, UCS_CLOCK_DIVIDER_1);
     UCS_initClockSignal(UCS_ACLK, UCS_DCOCLKDIV_SELECT, UCS_CLOCK_DIVIDER_8); // 1.5 MHz for USCI
-
-#else
-
-#endif
 
 
     uart_init();
