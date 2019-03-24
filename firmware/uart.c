@@ -94,6 +94,7 @@ void u16hex(uint32_t value, char* result, uint8_t bits) {
 }
 
 #pragma vector=USCI_A0_VECTOR
+__attribute__((ramfunc))
 __interrupt
 void USCI_A0_ISR(void) {
     uint8_t d, r;

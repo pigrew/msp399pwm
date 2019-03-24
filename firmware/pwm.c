@@ -103,6 +103,7 @@ void pwm_setPeriod(uint16_t period) {
     g_period = period;
 }
 #define MAX_32_D ((double)4294967295.0)
+
 static void pwm_applyRatio(uint16_t period) {
     // float is only 24-bit, so we need double-precision if using floating-point for math.
     double r = ((double)g_ratio)/MAX_32_D;
@@ -122,6 +123,7 @@ static void pwm_applyRatio(uint16_t period) {
 }
 
 void pwm_setRatio(uint32_t ratio) {
+
     g_ratio = ratio;
     pwm_applyRatio(g_period);
 }
@@ -130,6 +132,7 @@ void pwm_setRatio(uint32_t ratio) {
 // delta-sigma modulator, see http://www.ti.com/lit/an/slyt076/slyt076.pdf
 #define DS_N (30)
 #pragma vector=TIMER0_D0_VECTOR
+__attribute__((ramfunc))
 __interrupt
 void TIMER0_D0_ISR(void)
 {

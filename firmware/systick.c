@@ -29,6 +29,7 @@ uint16_t systick_get() {
 }
 
 #pragma vector=TIMER0_A0_VECTOR
+__attribute__((ramfunc))
 __interrupt
 void TIMER0_A0_ISR(void)
 {
