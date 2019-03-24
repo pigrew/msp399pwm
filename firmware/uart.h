@@ -15,7 +15,7 @@
 
 #define RXBUF_SIZE 20
 extern volatile size_t rxBufLen;
-extern uint8_t rxbuf[RXBUF_SIZE + 1]; // room for NULL byte
+extern volatile uint8_t rxbuf[RXBUF_SIZE + 1]; // room for NULL byte
 extern volatile bool cmdComplete;
 void itoa(long unsigned int value, char* result, int base);
 void u16hex(uint32_t value, char* result, uint8_t bits);

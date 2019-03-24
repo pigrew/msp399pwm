@@ -15,10 +15,10 @@
 
 volatile bool cmdComplete = false;
 volatile size_t rxBufLen = 0;
-uint8_t rxbuf[RXBUF_SIZE+1]; // leave a spot for a null terminator
+volatile uint8_t rxbuf[RXBUF_SIZE+1]; // leave a spot for a null terminator
 
 volatile bool tx_active = false;
-uint8_t txbuf[TXBUF_SIZE];
+volatile uint8_t txbuf[TXBUF_SIZE];
 struct ring_buffer tx_rb;
 
 void uart_init() {
@@ -102,7 +102,7 @@ void USCI_A0_ISR(void) {
     // Vector 2 - RXIFG
     case USCI_UCRXIFG:
 
-        d = USCI_A_UART_receiveData(USCI_A0_BASE);
+        d =HWREG8(USCI_A0_BASE + OFS_UCAxRXBUF);
         if(cmdComplete) // disregard if previous CMD has not been handled
             return;
 
@@ -125,7 +125,7 @@ void USCI_A0_ISR(void) {
         // tx_active must be true
         r = rb_get(&tx_rb, &d);
         if(r == 0) { // success
-            USCI_A_UART_transmitData(USCI_A0_BASE, d);
+            HWREG8(USCI_A0_BASE + OFS_UCAxTXBUF) = d;
         } else {
             tx_active = false;
         }

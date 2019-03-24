@@ -17,7 +17,7 @@ struct ring_buffer
     size_t n_elem;
     volatile size_t head;
     volatile size_t tail;
-    uint8_t *buf;
+    volatile uint8_t *buf;
 };
 
 uint8_t rb_put(struct ring_buffer *rb, uint8_t d);
