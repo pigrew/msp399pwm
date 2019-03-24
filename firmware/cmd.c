@@ -39,8 +39,10 @@ void processCmds() {
         case 'p': // Set PWM period
         case 'P':
             d32 = strtoul((char*)&(rxbuf[1]), NULL, 0);
-            if(d32 > 0)
+            if(d32 > 0x1800) // bad things happen with sigma-delta if it goes too fast
                 pwm_setPeriod((uint16_t)d32);
+            else
+                rsp = 1;
             break;
         case 'r': // Set PWM ratio
         case 'R':

@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <msp430.h>
-
+#include "gpio.h"
 #include "main.h"
 
 // Uses timer A0 to generate 1 kHz tick

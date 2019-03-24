@@ -70,7 +70,7 @@ void pwm_init() {
 
     // Setup TD0CCR0: (interrupt enable) | (reset-set mode)  | (latch when timer0 goes to 0) |
     TD0CCTL0 =      OUTMOD_4 | CCIE ;//            | OUTMOD_4          | CLLD_1; // Toggle, just for fun
-    TD0CCTL1 =        OUTMOD_7; // 0                | OUTMOD_7          | CLLD_1;
+    TD0CCTL1 =        OUTMOD_7 | CLLD_1; // 0                | OUTMOD_7          | CLLD_1;
     TD0CCTL2 = OUTMOD_5;
     // To get divisor, take CCR0, round down to 4, add 4.
     TD0CCR0 = g_period;
@@ -117,7 +117,7 @@ static void pwm_applyRatio(uint16_t period) {
     __enable_interrupt();
 
     TD0CCR1 = pwmA_base;
-    TD0CL1 = pwmA_base;
+    //TD0CL1 = pwmA_base;
 
 }
 

@@ -1,4 +1,5 @@
 #include "driverlib.h"
+
 #include "uart.h"
 #include "pwm.h"
 #include "main.h"
@@ -57,7 +58,7 @@ void main(void)
     UCS_initFLLSettle(DCO_RATE/1000ul, DCO_RATE/32768);
 #endif
 
-    UCS_initClockSignal(UCS_MCLK, UCS_DCOCLKDIV_SELECT, UCS_CLOCK_DIVIDER_2);
+    UCS_initClockSignal(UCS_MCLK, UCS_DCOCLKDIV_SELECT, UCS_CLOCK_DIVIDER_1); // 12 MHz?
     UCS_initClockSignal(UCS_SMCLK, UCS_DCOCLK_SELECT, UCS_CLOCK_DIVIDER_1);
     UCS_initClockSignal(UCS_ACLK, UCS_DCOCLKDIV_SELECT, UCS_CLOCK_DIVIDER_8); // 1.5 MHz for USCI
 
@@ -71,6 +72,9 @@ void main(void)
 
     // Enable interrupts!
     __enable_interrupt();
+    uart_write("MSP399PWM\n",10);
+
+
     while(true) {
         uint16_t now = systick_get();
         processCmds();
