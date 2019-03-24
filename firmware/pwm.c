@@ -55,7 +55,7 @@ void pwm_init() {
     // TD0.0 and TD0.1 pins
     GPIO_setAsPeripheralModuleFunctionOutputPin(
                       GPIO_PORT_P2,
-                      GPIO_PIN4 | GPIO_PIN5 | GPIO_PIN6
+                      GPIO_PIN4 | GPIO_PIN5 //| GPIO_PIN6
                       );
 
     /*Timer_D_enableHighResInterrupt(TIMER_D0_BASE,
@@ -127,23 +127,28 @@ void pwm_setRatio(uint32_t ratio) {
     pwm_applyRatio(g_period);
 }
 
-
+#define HIGH_BYTE(x) (*(((uint8_t*)&x)+3))
+#define HIGH_WORD(x) (*(((uint16_t*)&x)+1))
 // delta-sigma modulator, see http://www.ti.com/lit/an/slyt076/slyt076.pdf
 #define DS_N (30)
 #pragma vector=TIMER0_D0_VECTOR
 __attribute__((ramfunc))
 __interrupt
-void TIMER0_D0_ISR(void)
-{
-    uint32_t delta = (pwmA_fraction_sigma & (1ul<<(DS_N-1))) ? (3ul << DS_N)  : 0;
+void TIMER0_D0_ISR(void) { // 3.13us
+    PAOUT_H |= (1 << (6)); // clear p2.6
+
+    uint32_t delta = 0;
+    if (HIGH_WORD(pwmA_fraction_sigma) & (0x8000)) // if highest bit set?
+        delta = (3ul << DS_N);
     uint32_t delta_out = pwmA_fraction + delta;
     uint32_t sigma_out = delta_out + pwmA_fraction_sigma;
     pwmA_fraction_sigma = sigma_out;
-    if((pwmA_fraction_sigma & (1ul<<(DS_N-1))))
-        TD0CCR1 = pwmA_base + 1;
-    else
-        TD0CCR1 = pwmA_base;
+    uint16_t x = 0;
+    if(HIGH_WORD(pwmA_fraction_sigma) & (0x8000)) // if highest bit set?
+        x=1;
+    TD0CCR1 = x + pwmA_base;
 
+    PAOUT_H &= ~(1 << (6)); // clear p2.6
 }
 
 // Timer0_D1 Interrupt Vector (TDIV) handler
