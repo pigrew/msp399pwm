@@ -24,9 +24,8 @@ static uint32_t pwmA_fraction_sigma;    // only touched by ISR, so no need for v
 static void pwm_applyRatio();
 
 void pwm_init() {
-    g_period = 0x9600;    // 100 kHz
-    g_ratio = 0xc0000000; // 0.75
-
+    g_period = 0x9600;    // 10 kHz
+    g_ratio = 3053247871ul;
 #ifdef DISCIPLINED
     Timer_D_initHighResGeneratorInRegulatedModeParam td_reg_params =
         {
@@ -73,8 +72,7 @@ void pwm_init() {
     TD0CCTL1 =        OUTMOD_7 | CLLD_1; // 0                | OUTMOD_7          | CLLD_1;
     TD0CCTL2 = OUTMOD_5;
     // To get divisor, take CCR0, round down to 4, add 4.
-    TD0CCR0 = g_period;
-    pwm_setRatio(g_ratio);
+    pwm_setPeriod(g_period); // will set both period and ratio
 
     TD0CTL1 |= TDCLKM__HIGHRES;
     TD0CTL1 &= ~TD2CMB; // don't combine CCR1 and CCR2
@@ -89,14 +87,16 @@ void pwm_init() {
 
 void pwm_setPeriod(uint16_t period) {
     if(period < 16)
-        period = 16; // minimum
+        period = 16; // minimum for PWM generator
+    period = period & ~(0x0007); // last few bits are ignored by timer
+
     // CCR1 may not immediately load, so try to load it manually?
     // Recalculate and reapply ratio
     if(period < g_period) { // reducing period
         pwm_applyRatio(period);
-        TD0CCR0 = period;
+        TD0CCR0 = period-1; // must subtract 1 to get proper period!
     } else {
-        TD0CCR0 = period;
+        TD0CCR0 = period-1; // must subtract 1 to get proper period!
         pwm_applyRatio(period);
     }
     g_period = period;
