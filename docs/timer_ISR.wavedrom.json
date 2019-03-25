@@ -1,0 +1,15 @@
+{signal: [
+  {name: 'TD0CCL0', wave: '2....................', data: ['N']},
+  {name: 'TD0R', wave: 'x22222xxx222xxxx22222', data: ['N-1','N','0','1','2','D-1','D','D+1','N-1','N','0','1','2'],  node: '...a......f.......h'},
+  {name: 'TD0CC1_ISR', wave: 'z....3...z.........3.', data: ['ISR'],  node: '.....b..d...'},
+  {name: 'TD0CCR1', wave: '2.......2............', data: ['D-S(t)','D-S(t+1)'],  node: '........e.....'},
+  {name: 'TD0CL1', wave: '2..2..............2..', data: ['D-S(t-1)','D-S(t)','D-S(t+1)'],  node: '...c.....'},
+  {name: 'OUT',     wave: '0..1...|..0...|...1..',  node: '..........g.......i'},
+],
+ head:{
+   text:'PWM Timer_D0 Interrupt',
+   tick:-1,
+ },
+ edge: [ 'a~->b ISR','a~>c Latch', 'd->e Set CCR1', 'f->g CL1 Match', 'h->i'],
+ config: { skin: 'default'},
+}
