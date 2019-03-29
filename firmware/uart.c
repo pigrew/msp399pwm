@@ -10,15 +10,14 @@
 #include "ring_buffer.h"
 #include "uart.h"
 
-// TB RB size must be power of 2
-#define TXBUF_SIZE 32
+#define TXBUF_BITS 5
 
 volatile bool cmdComplete = false;
 volatile size_t rxBufLen = 0;
 volatile uint8_t rxbuf[RXBUF_SIZE+1]; // leave a spot for a null terminator
 
 volatile bool tx_active = false;
-volatile uint8_t txbuf[TXBUF_SIZE];
+volatile uint8_t txbuf[1<<TXBUF_BITS];
 struct ring_buffer tx_rb;
 
 void uart_init() {
@@ -47,7 +46,7 @@ void uart_init() {
     tx_rb.head = 0;
     tx_rb.tail = 0;
     tx_rb.buf = txbuf;
-    tx_rb.n_elem = TXBUF_SIZE;
+    tx_rb.n_bits = TXBUF_BITS;
 }
 // 0 for success
 uint8_t uart_putc(uint8_t c) {
@@ -98,6 +97,8 @@ __attribute__((ramfunc))
 __interrupt
 void USCI_A0_ISR(void) {
     uint8_t d, r;
+
+    //PAOUT_H |= (1 << (6)); // set p2.6
     switch(__even_in_range(UCA0IV,4))  {
     // Vector 2 - RXIFG
     case USCI_UCRXIFG:
@@ -133,5 +134,7 @@ void USCI_A0_ISR(void) {
     default:
         break;
     }
+
+    //PAOUT_H &= ~(1 << (6)); // clear p2.6
 }
 

@@ -14,13 +14,16 @@
 
 struct ring_buffer
 {
-    size_t n_elem;
+    size_t n_bits; // number of bits in count, e.g. 4 would be 16 items
     volatile size_t head;
     volatile size_t tail;
     volatile uint8_t *buf;
 };
 
-uint8_t rb_put(struct ring_buffer *rb, uint8_t d);
-uint8_t rb_get(struct ring_buffer *rb, uint8_t *d);
+#define RB_NELEM(rb) (1<<(rb->n_bits))
+
+inline uint8_t rb_put(struct ring_buffer *rb, uint8_t d);
+inline uint8_t rb_get(struct ring_buffer *rb, uint8_t *d);
 bool rb_empty(struct ring_buffer *rb);
+
 #endif /* RING_BUFFER_H_ */
