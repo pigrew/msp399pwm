@@ -35,12 +35,10 @@
 
 void tmp411_init() {
 
-    ucb_i2c_init(USCI_B0_BASE,
-                 PA_BASE, /* SDA = */ 4 , /* SCL = */ 5,
-                 UCSSEL__ACLK,  60u);
-   ucb_i2c_writeReg8(TMP411_ADDR, TMP411_REG_RESET_WR, 0x00);
-   ucb_i2c_writeReg8(TMP411_ADDR, TMP411_REG_RES, TMP411_REG_RES_12);
-   ucb_i2c_writeReg8(TMP411_ADDR, TMP411_REG_RATE_WR, TMP411_REG_RATE_0p5);
+
+    ucb_i2c_writeReg8(TMP411_ADDR, TMP411_REG_RESET_WR, 0x00);
+    ucb_i2c_writeReg8(TMP411_ADDR, TMP411_REG_RES, TMP411_REG_RES_12);
+    ucb_i2c_writeReg8(TMP411_ADDR, TMP411_REG_RATE_WR, TMP411_REG_RATE_0p5);
 }
 
 uint16_t tmp411_getLocal() {

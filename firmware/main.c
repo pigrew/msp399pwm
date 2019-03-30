@@ -6,6 +6,7 @@
 #include "cmd.h"
 #include "tmp411.h"
 #include "systick.h"
+#include "usci_i2c.h"
 #include <string.h>
 
 // globals!
@@ -73,7 +74,13 @@ void main(void)
     UCS_initClockSignal(UCS_SMCLK, UCS_DCOCLK_SELECT, UCS_CLOCK_DIVIDER_1);
     UCS_initClockSignal(UCS_ACLK, UCS_DCOCLKDIV_SELECT, UCS_CLOCK_DIVIDER_8); // 1.5 MHz for USCI
 
-    GPIO_setAsOutputPin(GPIO_PORT_P2, GPIO_PIN6);
+    GPIO_setAsOutputPin(GPIO_PORT_P2, GPIO_PIN6); // debug pin
+
+    // Initialize I2C before initializing peripherials
+    ucb_i2c_init(USCI_B0_BASE,
+                 PA_BASE, /* SDA = */ 4 , /* SCL = */ 5,
+                 UCSSEL__ACLK,  15u);
+
     uart_init();
     pwm_init();
     tmp411_init();
