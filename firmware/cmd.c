@@ -10,7 +10,21 @@
 #include "uart.h"
 #include "cmd.h"
 #include "pwm.h"
+#include "tmp411.h"
 
+static void write_temps(void) {
+
+    uint8_t str[8];
+    uint16_t lt = tmp411_getLocal();
+    uint16_t rt = tmp411_getRemote();
+    uart_write("T",1);
+    u16hex(lt,(char*)str,16);
+    uart_write(str, 4);
+    uart_write(",", 1);
+    u16hex(rt,(char*)str,16);
+    uart_write(str, 4);
+    uart_write("\n",1);
+}
 void processCmds() {
     uint32_t d32;
     uint8_t rsp = 0; // 0 is success
@@ -33,6 +47,9 @@ void processCmds() {
                 break;
             case '1':
                 main_set_tempReport(true);
+                break;
+            case '?':
+                rsp=2;
                 break;
             }
             break;
@@ -59,6 +76,9 @@ end:
     switch(rsp) {
     case 0:
         uart_write("OK\n", 3);
+        break;
+    case 2:
+        write_temps();
         break;
     case 1:
     default:
