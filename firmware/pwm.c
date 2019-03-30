@@ -19,7 +19,6 @@ static uint32_t g_ratio; // ratio as set over UART
 
 static volatile uint16_t pwmA_base;     // touched by ISR and user code,
 static volatile uint32_t pwmA_fraction; // touched by ISR and user code, must disable interrupts before changing.
-static uint32_t pwmA_fraction_sigma;    // only touched by ISR, so no need for volatile.
 
 static void pwm_applyRatio();
 
@@ -103,6 +102,8 @@ void pwm_setPeriod(uint16_t period) {
 }
 #define MAX_32_D ((double)4294967295.0)
 
+
+__attribute__((ramfunc))
 static void pwm_applyRatio(uint16_t period) {
     // float is only 24-bit, so we need double-precision if using floating-point for math.
     double r = ((double)g_ratio)/MAX_32_D;
@@ -136,6 +137,7 @@ __attribute__((ramfunc))
 __interrupt
 void TIMER0_D0_ISR(void) { // 3.13us
     PAOUT_H |= (1 << (6)); // clear p2.6
+    static uint32_t pwmA_fraction_sigma;    // only touched by ISR, so no need for volatile.
 
     uint32_t delta = 0;
     if (HIGH_WORD(pwmA_fraction_sigma) & (0x8000)) // if highest bit set?
