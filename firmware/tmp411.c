@@ -23,8 +23,8 @@
 #define TMP411_REG_RES 0x1a
 #define TMP411_REG_RES_9 (0x1c | 0x00)
 #define TMP411_REG_RES_10 (0x1c | 0x01)
-#define TMP411_REG_RES_11 (0x1c | 0x10)
-#define TMP411_REG_RES_12 (0x1c | 0x11)
+#define TMP411_REG_RES_11 (0x1c | 0x02)
+#define TMP411_REG_RES_12 (0x1c | 0x03)
 
 #define TMP411_REG_RATE_RD 0x04
 #define TMP411_REG_RATE_WR 0x0a
