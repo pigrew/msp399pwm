@@ -4,11 +4,11 @@ Created on Sat Mar 30 16:23:35 2019
 
 @author: nconrad
 """
-#import visa
+import visa
 import re
 
 class msppwm:
-    def __init__(self, rm, addr):
+    def __init__(self, rm: visa.ResourceManager, addr):
         self.addr = addr
         self.inst = rm.open_resource(addr)
         self.inst.baud_rate = 57600
