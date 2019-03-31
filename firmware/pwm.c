@@ -137,7 +137,7 @@ __attribute__((ramfunc))
 __interrupt
 void TIMER0_D0_ISR(void) { // 3.13us
     PAOUT_H |= (1 << (6)); // clear p2.6
-    static uint32_t pwmA_fraction_sigma;    // only touched by ISR, so no need for volatile.
+    static uint32_t pwmA_fraction_sigma = (1<<31);    // only touched by ISR, so no need for volatile.
 
     uint32_t delta = 0;
     if (HIGH_WORD(pwmA_fraction_sigma) & (0x8000)) // if highest bit set?

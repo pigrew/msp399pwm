@@ -47,7 +47,7 @@ static void pwm_applyRatio(uint16_t period) {
 __attribute__((ramfunc))
 __interrupt
 void TIMER0_D0_ISR(void) { // 3.13us
-    static uint32_t pwmA_fraction_sigma;    // only touched by ISR, so no need for volatile.
+    static uint32_t pwmA_fraction_sigma = (1<<31);    // only touched by ISR, so no need for volatile.
 
     PAOUT_H |= (1 << (6)); // set p2.6
     uint32_t delta = 0;
