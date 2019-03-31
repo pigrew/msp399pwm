@@ -1,17 +1,19 @@
 #!/usr/bin/python3 import visa
-import io
-import serial
+
 import visa
 import signal
-import sys
 import time
 import numpy
+import measConfig
+import msppwm
 
-flist = [10e3,20e3,30e3,40e3,50e3,60e3,70e3,80e3]
+logfname = "out.csv"
+
+flist = [10e3,20e3]#,30e3,40e3,50e3,60e3,70e3,80e3]
 
 rmin = 3052222982 - 50000
 rmax = rmin + 100000
-rsteps = 2
+rsteps = 3
 
 catch_count=0
 default_handler = signal.getsignal(signal.SIGINT)
@@ -27,36 +29,33 @@ def signal_handler(sig, frame):
 	
 signal.signal(signal.SIGINT, signal_handler)
 
-addr = 'GPIB0::22::INSTR'
-serialPort = '/dev/ttyS10'
-
-
-ser = serial.Serial(serialPort,57600)
-#sio = io.TextIOWrapper(io.BufferedRWPair(ser, ser, 1), encoding='ascii')
+logf = open(logfname,"a")
+logf.write("freq,period,ratio,v,temp_l,temp_r\n")
 
 rm = visa.ResourceManager('C:\\windows\\system32\\visa64.dll')
-inst = rm.open_resource(addr)
+pwm = msppwm.msppwm(rm,measConfig.measConfig['msppwmAddr'])
+inst = rm.open_resource(measConfig.measConfig['dmmAddr'])
 print(inst.query("*IDN?"))
 inst.write("CONF:VOLT:DC 10")
 inst.write("SENSE:ZERO:AUTO ON")
 inst.write("VOLT:DC:NPLC 100")
+
 for f in flist:
-	p = round(38400.0/10000.0/f)
-	print("setting p to {}".format(p))
-	ser.write(bytes("p{}\n".format(p),'ascii'))
-	ser.flush()
-	ser.read(size=3)
-	for r in numpy.linspace(rmin,rmax,rsteps):
-		if(catch_count > 0):
-			break
-		#sio.write("r{}\n".format(r))
-		rr = round(r)
-		ser.write(bytes("r{}\n".format(rr),'ascii'))
-		ser.flush()
-		ser.read(size=3)
-		#print(sio.readline())
-		time.sleep(8)
-		vmeas = inst.query("MEAS?").strip()
-		print("{},{},{},{}".format(f,p,rr,vmeas))
-ser.close()
+    p = round(38400.0*10000.0/f)
+    print("setting p to {}".format(p))
+    pwm.setPeriod(p)
+    for r in numpy.linspace(rmin,rmax,rsteps):
+        if(catch_count > 0):
+            break
+        #sio.write("r{}\n".format(r))
+        rr = round(r)
+        pwm.setRatio(rr)
+        time.sleep(3)
+        vmeas = inst.query("MEAS?").strip()
+        t = pwm.getTemps()
+        print("{},{},{},{},{},{}".format(f,p,rr,vmeas,t['l'],t['r']))
+        logf.write("{},{},{},{},{},{}\n".format(f,p,rr,vmeas,t['l'],t['r']))
+        logf.flush()
+logf.close()
+pwm.close()
 inst.close()
