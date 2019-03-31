@@ -4,14 +4,13 @@ Created on Sat Mar 30 16:11:56 2019
 
 @author: nconrad
 """
-import visa
+import msppwm
 import measConfig
+import visa
 
 
 rm = visa.ResourceManager('C:\\windows\\system32\\visa64.dll')
-msppwm = rm.open_resource(measConfig.measConfig['msppwmAddr'])
-msppwm.baud_rate = 57600
-msppwm.data_bits = 8
-t=msppwm.query("t?")
 
-msppwm.close()
+pwm = msppwm.msppwm(rm,measConfig.measConfig['msppwmAddr'])
+print(pwm.getTemps())
+pwm.close()

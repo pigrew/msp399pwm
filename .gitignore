@@ -50,3 +50,4 @@ Module.symvers
 Mkfile.old
 dkms.conf
 Debug
+__pycache__

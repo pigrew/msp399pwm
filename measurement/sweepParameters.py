@@ -7,6 +7,8 @@ import numpy
 import measConfig
 import msppwm
 
+logfname = "out.csv"
+
 flist = [10e3,20e3]#,30e3,40e3,50e3,60e3,70e3,80e3]
 
 rmin = 3052222982 - 50000
@@ -27,15 +29,17 @@ def signal_handler(sig, frame):
 	
 signal.signal(signal.SIGINT, signal_handler)
 
+logf = open(logfname,"a")
+logf.write("freq,period,ratio,v,temp_l,temp_r\n")
+
 rm = visa.ResourceManager('C:\\windows\\system32\\visa64.dll')
-
 pwm = msppwm.msppwm(rm,measConfig.measConfig['msppwmAddr'])
-
 inst = rm.open_resource(measConfig.measConfig['dmmAddr'])
 print(inst.query("*IDN?"))
 inst.write("CONF:VOLT:DC 10")
 inst.write("SENSE:ZERO:AUTO ON")
 inst.write("VOLT:DC:NPLC 100")
+
 for f in flist:
     p = round(38400.0*10000.0/f)
     print("setting p to {}".format(p))
@@ -48,7 +52,10 @@ for f in flist:
         pwm.setRatio(rr)
         time.sleep(3)
         vmeas = inst.query("MEAS?").strip()
-        print("{},{},{},{}".format(f,p,rr,vmeas))
-
-msppwm.close()
+        t = pwm.getTemps()
+        print("{},{},{},{},{},{}".format(f,p,rr,vmeas,t['l'],t['r']))
+        logf.write("{},{},{},{},{},{}\n".format(f,p,rr,vmeas,t['l'],t['r']))
+        logf.flush()
+logf.close()
+pwm.close()
 inst.close()
