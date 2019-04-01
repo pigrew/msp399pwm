@@ -34,13 +34,15 @@ void main(void)
     // Configure unused pins with pull-up/down
     P1REN |= BIT0 | BIT2 | BIT3 | BIT6 | BIT7;
     P1OUT |= BIT2; // UART needs pull-up, not pull-down
-    P2REN |= BIT0 | BIT1 | BIT2 | BIT3 | BIT4;
+    P2REN |= BIT0 | BIT1 | BIT2 | BIT3;
     P3REN |= BIT0 | BIT1 | BIT2 | BIT3 | BIT4 | BIT5 | BIT6 | BIT7;
 
     PJDIR |= BIT0 | BIT1 | BIT2 | BIT3;
     PJSEL &= ~(BIT0 | BIT1 | BIT2 | BIT3);
 
     PJREN |= BIT6; // pull-up
+
+    GPIO_setAsOutputPin(GPIO_PORT_P2, GPIO_PIN4); // debug pin (TD0.0 function)
 
 #ifdef START_XTAL
     // XTAL pins
@@ -74,12 +76,10 @@ void main(void)
     UCS_initClockSignal(UCS_SMCLK, UCS_DCOCLK_SELECT, UCS_CLOCK_DIVIDER_1);
     UCS_initClockSignal(UCS_ACLK, UCS_DCOCLKDIV_SELECT, UCS_CLOCK_DIVIDER_8); // 1.5 MHz for USCI
 
-    GPIO_setAsOutputPin(GPIO_PORT_P2, GPIO_PIN6); // debug pin
-
     // Initialize I2C before initializing peripherials
     ucb_i2c_init(USCI_B0_BASE,
                  PA_BASE, /* SDA = */ 4 , /* SCL = */ 5,
-                 UCSSEL__ACLK,  15u);
+                 UCSSEL__ACLK,  ACLK_RATE/200000ul);
 
     uart_init();
     pwm_init();

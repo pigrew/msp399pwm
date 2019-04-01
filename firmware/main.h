@@ -12,9 +12,11 @@
 
 #define START_XTAL
 
+#define DUAL_PWM
+
 #define XTAL_RATE (8000000ul)
 
-#define FLLREF_RATE (4000000ul)
+#define FLLREF_RATE (XTAL_RATE/2)
 #define DCO_RATE (24000000ul)
 #define ACLK_RATE (1500000ul)
 

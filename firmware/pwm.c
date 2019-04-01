@@ -34,7 +34,9 @@ void pwm_init() {
          .highResClockDivider = TIMER_D_HIGHRES_CLK_DIVIDER_1,
          .highResClockMultiplyFactor = TIMER_D_HIGHRES_CLK_MULTIPLY_FACTOR_16x
     };
-
+    // Stop the timer, in case it has already started
+    TD0CTL0 &= ~MC_3;
+    TD0HCTL0 &= ~TDHEN;
     Timer_D_initHighResGeneratorInRegulatedMode(TIMER_D0_BASE, &td_reg_params);
     TD0HCTL0 &= ~(TDHEAEN); // Disable the enhanced-accuracy mode (which increases short-term jitter)
 #else
@@ -53,7 +55,7 @@ void pwm_init() {
     // TD0.0 and TD0.1 pins
     GPIO_setAsPeripheralModuleFunctionOutputPin(
                       GPIO_PORT_P2,
-                      GPIO_PIN4 | GPIO_PIN5 //| GPIO_PIN6
+                      GPIO_PIN5 | GPIO_PIN6
                       );
 
     /*Timer_D_enableHighResInterrupt(TIMER_D0_BASE,
@@ -67,9 +69,9 @@ void pwm_init() {
     // Configure the CCRx blocks
 
     // Setup TD0CCR0: (interrupt enable) | (reset-set mode)  | (latch when timer0 goes to 0) |
-    TD0CCTL0 =      OUTMOD_4 | CCIE ;//            | OUTMOD_4          | CLLD_1; // Toggle, just for fun
-    TD0CCTL1 =        OUTMOD_7 | CLLD_1; // 0                | OUTMOD_7          | CLLD_1;
-    TD0CCTL2 = OUTMOD_5;
+    TD0CCTL0 = CCIE ;//            | OUTMOD_4          | CLLD_1; // Toggle, just for fun
+    TD0CCTL1 = OUTMOD_7 | CLLD_1; // 0                | OUTMOD_7          | CLLD_1;
+    TD0CCTL2 = OUTMOD_3 | CLLD_1;
     // To get divisor, take CCR0, round down to 4, add 4.
     pwm_setPeriod(g_period); // will set both period and ratio
 
@@ -87,7 +89,7 @@ void pwm_init() {
 void pwm_setPeriod(uint16_t period) {
     if(period < 16)
         period = 16; // minimum for PWM generator
-    period = period & ~(0x0007); // last few bits are ignored by timer
+    period = period & ~(0x000f); // last few bits are ignored by timer
 
     // CCR1 may not immediately load, so try to load it manually?
     // Recalculate and reapply ratio
@@ -118,6 +120,9 @@ static void pwm_applyRatio(uint16_t period) {
     __enable_interrupt();
 
     TD0CCR1 = pwmA_base;
+#ifdef DUAL_PWM
+    TD0CCR2 = period - pwmA_base + 1;
+#endif
     //TD0CL1 = pwmA_base;
 
 }
@@ -136,8 +141,11 @@ void pwm_setRatio(uint32_t ratio) {
 __attribute__((ramfunc))
 __interrupt
 void TIMER0_D0_ISR(void) { // 3.13us
-    PAOUT_H |= (1 << (6)); // clear p2.6
-    static uint32_t pwmA_fraction_sigma = (1<<31);    // only touched by ISR, so no need for volatile.
+    static uint32_t pwmA_fraction_sigma = (1ul<<31);    // only touched by ISR, so no need for volatile.
+#ifdef DUAL_PWM
+    static uint8_t toggle = 0;
+#endif
+    PAOUT_H |= (1 << (4)); // set p2.4
 
     uint32_t delta = 0;
     if (HIGH_WORD(pwmA_fraction_sigma) & (0x8000)) // if highest bit set?
@@ -148,9 +156,33 @@ void TIMER0_D0_ISR(void) { // 3.13us
     uint16_t x = 0;
     if(HIGH_WORD(pwmA_fraction_sigma) & (0x8000)) // if highest bit set?
         x=1;
+#ifdef DUAL_PWM
+    if(toggle)
+        TD0CCR1 = x + pwmA_base;
+    else
+        TD0CCR2 = g_period - (pwmA_base + x);
+
+    delta = 0;
+    if (HIGH_WORD(pwmA_fraction_sigma) & (0x8000)) // if highest bit set?
+        delta = (3ul << DS_N);
+    delta_out = pwmA_fraction + delta;
+    sigma_out = delta_out + pwmA_fraction_sigma;
+    pwmA_fraction_sigma = sigma_out;
+    x = 0;
+    if(HIGH_WORD(pwmA_fraction_sigma) & (0x8000)) // if highest bit set?
+        x=1;
+    if(toggle)
+        TD0CCR2 = g_period - (pwmA_base + x);
+    else
+        TD0CCR1 = x + pwmA_base;
+    toggle = !toggle;
+#else
     TD0CCR1 = x + pwmA_base;
 
-    PAOUT_H &= ~(1 << (6)); // clear p2.6
+#endif
+
+
+    PAOUT_H &= ~(1 << (4)); // clear p2.4
 }
 
 // Timer0_D1 Interrupt Vector (TDIV) handler
