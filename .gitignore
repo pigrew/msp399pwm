@@ -51,3 +51,4 @@ Mkfile.old
 dkms.conf
 Debug
 __pycache__
+.ipynb_checkpoints
