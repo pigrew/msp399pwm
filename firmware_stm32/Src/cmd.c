@@ -18,13 +18,13 @@ static void write_temps(void) {
     uint8_t str[8];
     uint16_t lt;// = tmp411_getLocal();
     uint16_t rt;// = tmp411_getRemote();
-    uart_write("T",1);
+    uart_write((uint8_t*)"T",1);
     u16hex(lt,(char*)str,16);
     uart_write(str, 4);
-    uart_write(",", 1);
+    uart_write((uint8_t*)",", 1);
     u16hex(rt,(char*)str,16);
     uart_write(str, 4);
-    uart_write("\n",1);
+    uart_write((uint8_t*)"\n",1);
 }
 void processCmds() {
     uint32_t d32;
@@ -76,14 +76,14 @@ void processCmds() {
 end:
     switch(rsp) {
     case 0:
-        uart_write("OK\n", 3);
+        uart_write((uint8_t*)"OK\n", 3);
         break;
     case 2:
         write_temps();
         break;
     case 1:
     default:
-        uart_write("ERROR\n", 6);
+        uart_write((uint8_t*)"ERROR\n", 6);
         break;
     }
     rxBufLen = 0;

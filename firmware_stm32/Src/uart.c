@@ -18,6 +18,7 @@
 volatile bool cmdComplete = false;
 volatile size_t rxBufLen = 0;
 volatile uint8_t rxbuf[RXBUF_SIZE+1]; // leave a spot for a null terminator
+static uint8_t rxbuf2; // buffer used by HAL
 
 volatile bool tx_active = false;
 volatile uint8_t txbuf[1<<TXBUF_BITS];
@@ -34,6 +35,8 @@ void uart_init(UART_HandleTypeDef* huart) {
     tx_rb.tail = 0;
     tx_rb.buf = txbuf;
     tx_rb.n_bits = TXBUF_BITS;
+
+    HAL_UART_Receive_IT(huart_, &rxbuf2, 1);
 }
 uint8_t loadHALTxBufferAndTX() {
 
@@ -87,49 +90,32 @@ void u16hex(uint32_t value, char* result, uint8_t bits) {
     }
     return;
 }
-
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+
+    if(!cmdComplete) { // disregard if previous CMD has not been handled
+    	uint8_t d = rxbuf2;
+		if(rxBufLen < RXBUF_SIZE)
+			rxbuf[rxBufLen++] = d;
+		else
+			rxBufLen = 0; /* Overflow, clear buffer */
+
+		if(d == '\n' || d == '\r') {
+			if(rxBufLen == 1) {
+				rxBufLen = 0;
+			} else {
+				// Line complete
+				cmdComplete = true;
+			}
+		}
+    }
+    HAL_UART_Receive_IT(huart_, &rxbuf2, 1);
+
+}
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 {
 	if(loadHALTxBufferAndTX()) {
 	} else {
         tx_active = false;
 	}
 }
-/*
-#pragma vector=USCI_A0_VECTOR
-__attribute__((ramfunc))
-__interrupt
-void USCI_A0_ISR(void) {
-    uint8_t d, r;
-
-    //PAOUT_H |= (1 << (6)); // set p2.6
-    switch(__even_in_range(UCA0IV,4))  {
-    // Vector 2 - RXIFG
-    case USCI_UCRXIFG:
-
-        d =HWREG8(USCI_A0_BASE + OFS_UCAxRXBUF);
-        if(cmdComplete) // disregard if previous CMD has not been handled
-            return;
-
-        if(rxBufLen < RXBUF_SIZE)
-            rxbuf[rxBufLen++] = d;
-        else
-            rxBufLen = 0; /* Overflow, clear buffer * /
-
-        if(d == '\n' || d == '\r') {
-            if(rxBufLen == 1) {
-                rxBufLen = 0;
-            } else {
-                // Line complete
-                cmdComplete = true;
-                __bic_SR_register_on_exit (LPM0_bits);
-            }
-        }
-        break;
-
-    default:
-        break;
-    }
-
-    //PAOUT_H &= ~(1 << (6)); // clear p2.6
-}*/

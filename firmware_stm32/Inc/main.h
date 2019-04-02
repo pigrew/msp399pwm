@@ -32,7 +32,7 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <stdbool.h>
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -56,7 +56,7 @@ void HAL_HRTIM_MspPostInit(HRTIM_HandleTypeDef *hhrtim);
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
-
+void main_set_tempReport(bool enabled);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/

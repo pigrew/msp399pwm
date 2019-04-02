@@ -25,6 +25,7 @@
 /* USER CODE BEGIN Includes */
 #include "pwm.h"
 #include "uart.h"
+#include "cmd.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -48,7 +49,8 @@ HRTIM_HandleTypeDef hhrtim1;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-
+static bool g_tempReport = false;
+static uint16_t g_lastTempTick = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -62,6 +64,11 @@ static void MX_USART2_UART_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+void main_set_tempReport(bool enabled) {
+    //g_lastTempTick = systick_get();
+    g_tempReport = enabled;
+}
 
 /* USER CODE END 0 */
 
@@ -99,7 +106,7 @@ int main(void)
   uart_init(&huart2);
   pwm_init();
 
-  uart_write("STM399PWM\n",10);
+  uart_write((uint8_t*)"STM399PWM\n",10);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -109,6 +116,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	  processCmds();
 	  HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON,PWR_SLEEPENTRY_WFI);
   }
   /* USER CODE END 3 */
