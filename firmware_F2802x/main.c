@@ -88,7 +88,8 @@
 //
 // Included Files
 //
-#include "DSP28x_Project.h"         // F2802x Headerfile
+#include "F2802x_Device.h"     // F2802x Headerfile Include File
+#include "main.h"
 
 #include "common/include/clk.h"
 #include "common/include/flash.h"
@@ -97,6 +98,8 @@
 #include "common/include/pll.h"
 #include "common/include/pwm.h"
 #include "common/include/wdog.h"
+
+#include "uart.h"
 
 //
 // Function prototypes
@@ -200,16 +203,6 @@ void main(void)
     GPIO_setMode(myGpio, GPIO_Number_2, GPIO_2_Mode_EPWM2A);
     GPIO_setMode(myGpio, GPIO_Number_3, GPIO_3_Mode_EPWM2B);
 
-    GPIO_setPullUp(myGpio, GPIO_Number_4, GPIO_PullUp_Disable);
-    GPIO_setPullUp(myGpio, GPIO_Number_5, GPIO_PullUp_Disable);
-    GPIO_setMode(myGpio, GPIO_Number_4, GPIO_4_Mode_EPWM3A);
-    GPIO_setMode(myGpio, GPIO_Number_5, GPIO_5_Mode_EPWM3B);
-
-    GPIO_setPullUp(myGpio, GPIO_Number_6, GPIO_PullUp_Disable);
-    GPIO_setPullUp(myGpio, GPIO_Number_7, GPIO_PullUp_Disable);
-    GPIO_setMode(myGpio, GPIO_Number_6, GPIO_6_Mode_EPWM4A);
-    GPIO_setMode(myGpio, GPIO_Number_7, GPIO_7_Mode_EPWM4B);
-
     //
     // Setup a debug vector table and enable the PIE
     //
@@ -254,10 +247,6 @@ void main(void)
     // ePWM and HRPWM register initialization
     //
     HRPWM1_Config(0xfff0);        // ePWM1 target, Period = 10
-    //HRPWM2_Config(20);        // ePWM2 target, Period = 20
-    HRPWM3_Config(10);        // ePWM3 target, Period = 10
-    HRPWM4_Config(20);        // ePWM4 target, Period = 20
-
 
     do
         sfoStatus = SFO();
@@ -265,6 +254,8 @@ void main(void)
 
     if(sfoStatus == SFO_ERROR)
         error();
+
+    uart_init(myClk, myGpio, myPie);
 
     while (update ==1)
     {
@@ -342,163 +333,6 @@ HRPWM1_Config() {
     PWM_forceSync(myPwm1);
 }
 
-//
-// HRPWM2_Config - 
-//
-void
-HRPWM2_Config(Uint16 period)
-{
-    CLK_enablePwmClock(myClk, PWM_Number_2);
-
-    //
-    // ePWM2 register configuration with HRPWM
-    // ePWM2A toggle low/high with MEP control on Rising edge
-    //
-    PWM_setPeriodLoad(myPwm2, PWM_PeriodLoad_Immediate);
-    PWM_setPeriod(myPwm2, g_period);     // Set timer period
-    PWM_setCmpA(myPwm2, (g_period/2 + g_duration>>16) % g_period);
-    PWM_setCmpB(myPwm2,  g_period/2);
-    PWM_setCmpAHr(myPwm2, (1 << 8));
-    PWM_setPhase(myPwm2, 0x0000);        // Phase is 0
-    PWM_setCount(myPwm2, 0x0000);        // Clear counter
-
-    PWM_setCounterMode(myPwm2, PWM_CounterMode_Up);   // Count up
-    PWM_disableCounterLoad(myPwm2);                   // Disable phase loading
-    PWM_setSyncMode(myPwm2, PWM_SyncMode_Disable);
-    
-    //
-    // Clock ratio to SYSCLKOUT
-    //
-    PWM_setHighSpeedClkDiv(myPwm2, PWM_HspClkDiv_by_1);
-    
-    PWM_setClkDiv(myPwm2, PWM_ClkDiv_by_1);
-
-    //
-    // Load registers every ZERO
-    //
-    PWM_setShadowMode_CmpA(myPwm2, PWM_ShadowMode_Shadow);
-    PWM_setShadowMode_CmpB(myPwm2, PWM_ShadowMode_Shadow);
-    PWM_setLoadMode_CmpA(myPwm2, PWM_LoadMode_Zero);
-    PWM_setLoadMode_CmpB(myPwm2, PWM_LoadMode_Zero);
-
-    PWM_setActionQual_Zero_PwmA(myPwm2, PWM_ActionQual_Disabled);
-    PWM_setActionQual_CntUp_CmpA_PwmA(myPwm2, PWM_ActionQual_Clear);
-    PWM_setActionQual_CntUp_CmpB_PwmA(myPwm2, PWM_ActionQual_Set);
-    PWM_setActionQual_Zero_PwmB(myPwm2, PWM_ActionQual_Disabled);
-    PWM_setActionQual_CntUp_CmpB_PwmB(myPwm2, PWM_ActionQual_Disabled);
-    //
-    // MEP control on Rising edge
-    //
-    PWM_setHrEdgeMode(myPwm2, PWM_HrEdgeMode_Falling);
-    PWM_setHrControlMode(myPwm2, PWM_HrControlMode_Duty);
-    PWM_setHrShadowMode(myPwm2, PWM_HrShadowMode_CTR_EQ_0);
-}
-
-//
-// HRPWM3_Config - 
-//
-void
-HRPWM3_Config(Uint16 period)
-{
-    CLK_enablePwmClock(myClk, PWM_Number_3);
-
-    //
-    // ePWM3 register configuration with HRPWM
-    // ePWM3A toggle high/low with MEP control on falling edge
-    //
-    PWM_setPeriodLoad(myPwm3, PWM_PeriodLoad_Immediate);
-    PWM_setPeriod(myPwm3, period-1);    // Set timer period
-    PWM_setCmpA(myPwm3, period / 2);
-    PWM_setCmpAHr(myPwm3, (1 << 8));
-    PWM_setCmpB(myPwm3, period / 2);
-    PWM_setPhase(myPwm3, 0x0000);       // Phase is 0
-    PWM_setCount(myPwm3, 0x0000);       // Clear counter
-
-    PWM_setCounterMode(myPwm3, PWM_CounterMode_Up);   // Count up
-    PWM_disableCounterLoad(myPwm3);                   // Disable phase loading
-    PWM_setSyncMode(myPwm3, PWM_SyncMode_Disable);
-    
-    //
-    // Clock ratio to SYSCLKOUT
-    //
-    PWM_setHighSpeedClkDiv(myPwm3, PWM_HspClkDiv_by_1); 
-    
-    PWM_setClkDiv(myPwm3, PWM_ClkDiv_by_1);
-
-    //
-    // Load registers every ZERO
-    //
-    PWM_setShadowMode_CmpA(myPwm3, PWM_ShadowMode_Shadow);
-    PWM_setShadowMode_CmpB(myPwm3, PWM_ShadowMode_Shadow);
-    PWM_setLoadMode_CmpA(myPwm3, PWM_LoadMode_Zero);
-    PWM_setLoadMode_CmpB(myPwm3, PWM_LoadMode_Zero);
-
-    PWM_setActionQual_Zero_PwmA(myPwm3, PWM_ActionQual_Clear);
-    PWM_setActionQual_CntUp_CmpA_PwmA(myPwm3, PWM_ActionQual_Set);
-    PWM_setActionQual_Zero_PwmB(myPwm3, PWM_ActionQual_Clear);
-    PWM_setActionQual_CntUp_CmpB_PwmB(myPwm3, PWM_ActionQual_Set);
-
-    //
-    // MEP control on falling edge
-    //
-    PWM_setHrEdgeMode(myPwm3, PWM_HrEdgeMode_Falling);
-    PWM_setHrControlMode(myPwm3, PWM_HrControlMode_Duty);
-    PWM_setHrShadowMode(myPwm3, PWM_HrShadowMode_CTR_EQ_0);
-}
-
-//
-// HRPWM4_Config - 
-//
-void
-HRPWM4_Config(Uint16 period)
-{
-    CLK_enablePwmClock(myClk, PWM_Number_4);
-
-    //
-    // ePWM4 register configuration with HRPWM
-    // ePWM4A toggle high/low with MEP control on falling edge
-    //
-    PWM_setPeriodLoad(myPwm4, PWM_PeriodLoad_Immediate);
-    PWM_setPeriod(myPwm4, period-1);    // Set timer period
-    PWM_setCmpA(myPwm4, period / 2);
-    PWM_setCmpAHr(myPwm4, (1 << 8));
-    PWM_setCmpB(myPwm4, period / 2);
-    PWM_setPhase(myPwm4, 0x0000);       // Phase is 0
-    PWM_setCount(myPwm4, 0x0000);       // Clear counter
-
-    PWM_setCounterMode(myPwm4, PWM_CounterMode_Up);   // Count up
-    PWM_disableCounterLoad(myPwm4);                   // Disable phase loading
-    PWM_setSyncMode(myPwm4, PWM_SyncMode_Disable);
-    
-    //
-    // Clock ratio to SYSCLKOUT
-    //
-    PWM_setHighSpeedClkDiv(myPwm4, PWM_HspClkDiv_by_1);
-    
-    PWM_setClkDiv(myPwm4, PWM_ClkDiv_by_1);
-
-    //
-    // Load registers every ZERO
-    //
-    PWM_setShadowMode_CmpA(myPwm4, PWM_ShadowMode_Shadow);
-    PWM_setShadowMode_CmpB(myPwm4, PWM_ShadowMode_Shadow);
-    PWM_setLoadMode_CmpA(myPwm4, PWM_LoadMode_Zero);
-    PWM_setLoadMode_CmpB(myPwm4, PWM_LoadMode_Zero);
-
-    PWM_setActionQual_Zero_PwmA(myPwm4, PWM_ActionQual_Clear);
-    PWM_setActionQual_CntUp_CmpA_PwmA(myPwm4, PWM_ActionQual_Set);
-    PWM_setActionQual_Zero_PwmB(myPwm4, PWM_ActionQual_Clear);
-    PWM_setActionQual_CntUp_CmpB_PwmB(myPwm4, PWM_ActionQual_Set);
-
-    //
-    // MEP control on falling edge
-    //
-    PWM_setHrEdgeMode(myPwm4, PWM_HrEdgeMode_Falling);
-    PWM_setHrControlMode(myPwm4, PWM_HrControlMode_Duty);
-    PWM_setHrShadowMode(myPwm4, PWM_HrShadowMode_CTR_EQ_0);
-
-
-}
 static void SetupXtal(PLL_Handle myPll) {
     // enable the crystal oscillator
     CLK_enableCrystalOsc(myClk);
