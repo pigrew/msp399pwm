@@ -52,3 +52,4 @@ dkms.conf
 Debug
 __pycache__
 .ipynb_checkpoints
+/firmware_stm32/Drivers
