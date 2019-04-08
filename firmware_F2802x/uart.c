@@ -45,7 +45,11 @@ struct ring_buffer tx_rb;
 
 void uart_init(CLK_Handle myClk, GPIO_Handle myGpio, PIE_Handle pieHandle) {
     myPie = pieHandle;
-    mySci = SCI_init((void *)SCIA_BASE_ADDR, sizeof(SCI_Obj));
+
+    tx_rb.head = 0;
+    tx_rb.tail = 0;
+    tx_rb.buf = txbuf;
+    tx_rb.n_bits = TXBUF_BITS;
 
     GPIO_setPullUp(myGpio, GPIO_Number_28, GPIO_PullUp_Enable);
     GPIO_setPullUp(myGpio, GPIO_Number_29, GPIO_PullUp_Disable);
@@ -53,17 +57,19 @@ void uart_init(CLK_Handle myClk, GPIO_Handle myGpio, PIE_Handle pieHandle) {
     GPIO_setMode(myGpio, GPIO_Number_28, GPIO_28_Mode_SCIRXDA);
     GPIO_setMode(myGpio, GPIO_Number_29, GPIO_29_Mode_SCITXDA);
 
+    mySci = SCI_init((void *)SCIA_BASE_ADDR, sizeof(SCI_Obj));
+
     CLK_enableSciaClock(myClk);
 
     SCI_disableParity(mySci);
     SCI_setNumStopBits(mySci, SCI_NumStopBits_One);
     SCI_setCharLength(mySci, SCI_CharLength_8_Bits);
 
-    // 9600 ???
+    // 57600 ???
 #if (CPU_FRQ_60MHZ)
     SCI_setBaudRate(mySci, (SCI_BaudRate_e)194);
 #elif (CPU_FRQ_50MHZ)
-    SCI_setBaudRate(mySci, (SCI_BaudRate_e)162);
+    SCI_setBaudRate(mySci, (SCI_BaudRate_e)26);
 #elif (CPU_FRQ_40MHZ)
     SCI_setBaudRate(mySci, (SCI_BaudRate_e)129);
 #endif
@@ -131,7 +137,7 @@ uint16_t uart_write(uint16_t *data, size_t len) {
         uint16_t c;
         tx_active = true;
         if(0 == rb_get(&tx_rb, &c))
-            SCI_putDataNonBlocking(mySci, c);
+            SCI_putData(mySci, c);
     }
     return r;
 }
