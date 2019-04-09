@@ -137,7 +137,6 @@ CLK_Handle myClk;
 FLASH_Handle myFlash;
 GPIO_Handle myGpio;
 PIE_Handle myPie;
-PWM_Handle myPwm1, myPwm2, myPwm3, myPwm4;
 
 //
 // Main
@@ -158,10 +157,6 @@ void main(void)
     myGpio = GPIO_init((void *)GPIO_BASE_ADDR, sizeof(GPIO_Obj));
     myPie = PIE_init((void *)PIE_BASE_ADDR, sizeof(PIE_Obj));
     myPll = PLL_init((void *)PLL_BASE_ADDR, sizeof(PLL_Obj));
-    myPwm1 = PWM_init((void *)PWM_ePWM1_BASE_ADDR, sizeof(PWM_Obj));
-    myPwm2 = PWM_init((void *)PWM_ePWM2_BASE_ADDR, sizeof(PWM_Obj));
-    myPwm3 = PWM_init((void *)PWM_ePWM3_BASE_ADDR, sizeof(PWM_Obj));
-    myPwm4 = PWM_init((void *)PWM_ePWM4_BASE_ADDR, sizeof(PWM_Obj));
     myWDog = WDOG_init((void *)WDOG_BASE_ADDR, sizeof(WDOG_Obj));
 
     //
@@ -169,6 +164,7 @@ void main(void)
     //
 
     WDOG_disable(myWDog);
+
     // Load factory calibration coefficients (through ROM function)
     CLK_enableAdcClock(myClk);
     (*Device_cal)();
@@ -191,19 +187,6 @@ void main(void)
 #endif
 
     //
-    // For this case just init GPIO pins for EPwm1, EPwm2, EPwm3, EPwm4
-    //
-    GPIO_setPullUp(myGpio, GPIO_Number_0, GPIO_PullUp_Disable);
-    GPIO_setPullUp(myGpio, GPIO_Number_1, GPIO_PullUp_Disable);
-    GPIO_setMode(myGpio, GPIO_Number_0, GPIO_0_Mode_EPWM1A);
-    GPIO_setMode(myGpio, GPIO_Number_1, GPIO_1_Mode_EPWM1B);
-
-    GPIO_setPullUp(myGpio, GPIO_Number_2, GPIO_PullUp_Disable);
-    GPIO_setPullUp(myGpio, GPIO_Number_3, GPIO_PullUp_Disable);
-    GPIO_setMode(myGpio, GPIO_Number_2, GPIO_2_Mode_EPWM2A);
-    GPIO_setMode(myGpio, GPIO_Number_3, GPIO_3_Mode_EPWM2B);
-
-    //
     // Setup a debug vector table and enable the PIE
     //
     PIE_setDebugIntVectorTable(myPie);
@@ -213,40 +196,12 @@ void main(void)
     DutyFine =0;
 
     CLK_disableTbClockSync(myClk);
-
-    //
-    // Some useful Period vs Frequency values
-    //  SYSCLKOUT =     60 MHz       40 MHz
-    //
-    //    Period            Frequency    Frequency
-    //    1000               60 kHz       40 kHz
-    //    800                75 kHz       50 kHz
-    //    600                100 kHz      67 kHz
-    //    500                120 kHz      80 kHz
-    //    250                240 kHz      160 kHz
-    //    200                300 kHz      200 kHz
-    //    100                600 kHz      400 kHz
-    //    50                 1.2 Mhz      800 kHz
-    //    25                 2.4 Mhz      1.6 MHz
-    //    20                 3.0 Mhz      2.0 MHz
-    //    12                 5.0 MHz      3.3 MHz
-    //    10                 6.0 MHz      4.0 MHz
-    //    9                  6.7 MHz      4.4 MHz
-    //    8                  7.5 MHz      5.0 MHz
-    //    7                  8.6 MHz      5.7 MHz
-    //    6                  10.0 MHz     6.6 MHz
-    //    5                  12.0 MHz     8.0 MHz
-    //
-    // Enable PWM clocks
-
-    CLK_enablePwmClock(myClk, PWM_Number_1);
-    CLK_enablePwmClock(myClk, PWM_Number_2);
     CLK_enableTbClockSync(myClk);
-    CLK_enableHrPwmClock(myClk);
+
     //
     // ePWM and HRPWM register initialization
     //
-    HRPWM1_Config(0xfff0);        // ePWM1 target, Period = 10
+    pwm_init(myClk, myGpio);        // ePWM1 target, Period = 10
 
     do
         sfoStatus = SFO();
@@ -256,6 +211,8 @@ void main(void)
         error();
 
     uart_init(myClk, myGpio, myPie);
+
+    uart_write("Hello World!\n", 13);
 
     while (update ==1)
     {
@@ -269,68 +226,6 @@ void main(void)
             asm("   NOP");
         }
     }
-}
-
-uint16_t g_period   = 0x0050;
-uint32_t g_duration = 0x00388000;
-uint32_t g_ratio = 3053247871ul;
-
-
-//
-// HRPWM1_Config - 
-//
-void
-HRPWM1_Config() {
-    uint32_t ch;
-
-    PWM_setPeriodLoad(myPwm1, PWM_PeriodLoad_Immediate);
-    PWM_setPeriodLoad(myPwm2, PWM_PeriodLoad_Immediate);
-    PWM_setPeriod(myPwm1, g_period);    // Set timer period to max
-    EPwm2Regs.CMPA.all = g_duration & 0xFFF0;
-
-    for(ch=0; ch<2; ch++) {
-        PWM_Handle h;
-        if(ch==0)
-            h = myPwm1;
-        else
-            h = myPwm2;
-
-        PWM_setPeriod(h, g_period);
-
-        PWM_setCmpA(h, g_duration>>16);
-        PWM_setCmpAHr(h, (uint8_t)(g_duration & 0xFF00));
-        if(ch == 0)
-            PWM_setPhase(h, 0x0000);       // Phase is 0
-        else
-            PWM_setPhase(h, g_period/2);       // Phase is 0
-        PWM_setCount(h, 0x0000);       // Clear counter
-
-        PWM_enableCounterLoad(h);                  // Enable phase loading
-
-        PWM_setSyncMode(h, PWM_SyncMode_EPWMxSYNC); // Allow software-sync output?
-        PWM_setHighSpeedClkDiv(h, PWM_HspClkDiv_by_1);
-
-        PWM_setClkDiv(h, PWM_ClkDiv_by_1);
-
-
-        PWM_setShadowMode_CmpA(h, PWM_ShadowMode_Shadow);
-        PWM_setShadowMode_CmpB(h, PWM_ShadowMode_Shadow);
-        PWM_setLoadMode_CmpA(h, PWM_LoadMode_Zero);
-        PWM_setLoadMode_CmpB(h, PWM_LoadMode_Zero);
-
-        PWM_setActionQual_Zero_PwmA(h, PWM_ActionQual_Set);
-        PWM_setActionQual_CntUp_CmpA_PwmA(h, PWM_ActionQual_Clear);
-        PWM_setActionQual_Zero_PwmB(h, PWM_ActionQual_Clear);
-        PWM_setActionQual_CntUp_CmpB_PwmB(h, PWM_ActionQual_Set);
-
-        //
-        PWM_setHrEdgeMode(h, PWM_HrEdgeMode_Falling);
-
-        PWM_setHrControlMode(h, PWM_HrControlMode_Duty);
-        PWM_setHrShadowMode(h, PWM_HrShadowMode_CTR_EQ_0);
-        PWM_setCounterMode(h, PWM_CounterMode_Up);  // Count up
-    }
-    PWM_forceSync(myPwm1);
 }
 
 static void SetupXtal(PLL_Handle myPll) {
