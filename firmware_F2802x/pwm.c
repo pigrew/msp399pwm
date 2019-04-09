@@ -38,10 +38,11 @@ void pwm_init(CLK_Handle myClk, GPIO_Handle myGpio) {
     GPIO_setMode(myGpio, GPIO_Number_2, GPIO_2_Mode_EPWM2A);
     GPIO_setMode(myGpio, GPIO_Number_3, GPIO_3_Mode_EPWM2B);
 
+
+    CLK_enableTbClockSync(myClk);
     CLK_enablePwmClock(myClk, PWM_Number_1);
     CLK_enablePwmClock(myClk, PWM_Number_2);
     CLK_enableHrPwmClock(myClk);
-
 
     PWM_setPeriodLoad(myPwm1, PWM_PeriodLoad_Immediate);
     PWM_setPeriodLoad(myPwm2, PWM_PeriodLoad_Immediate);

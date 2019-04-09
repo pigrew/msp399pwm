@@ -74,10 +74,12 @@ void uart_init(CLK_Handle myClk, GPIO_Handle myGpio, PIE_Handle pieHandle) {
     SCI_setBaudRate(mySci, (SCI_BaudRate_e)129);
 #endif
 
+    SCI_disableTxFifoInt(mySci);
+    SCI_disableRxFifoInt(mySci);
     SCI_enableTx(mySci);
     SCI_enableRx(mySci);
-    SCI_enableTxInt(mySci);
-    SCI_enableRxInt(mySci);
+    //SCI_enableTxInt(mySci);
+    //SCI_enableRxInt(mySci);
 
     scia_fifo_init(mySci);
 
@@ -89,13 +91,14 @@ void uart_init(CLK_Handle myClk, GPIO_Handle myGpio, PIE_Handle pieHandle) {
     EDIS;      // This is needed to disable write to EALLOW protected registers
 
     //
-    // Register interrupt handlers in the PIE vector table
+    // Driverlib code:
     //
-    PIE_registerPieIntHandler(myPie, PIE_GROUP_SCIA, (PIE_SubGroupNumber_e)PIE_InterruptSource_SCIARX,
+  /*  PIE_registerPieIntHandler(myPie, PIE_GROUP_SCIA, (PIE_SubGroupNumber_e)PIE_InterruptSource_SCIARX,
                               (intVec_t)&sciaRxFifoIsr);
     PIE_registerPieIntHandler(myPie, PIE_GROUP_SCIA, (PIE_SubGroupNumber_e)PIE_InterruptSource_SCIATX,
-                              (intVec_t)&sciaTxFifoIsr);
-
+                              (intVec_t)&sciaTxFifoIsr);*/
+    PIE_enableInt(myPie, PIE_GroupNumber_9, PIE_InterruptSource_SCIARX);
+    PIE_enableInt(myPie, PIE_GroupNumber_9, PIE_InterruptSource_SCIATX);
     SCI_enable(mySci);
 }
 
@@ -110,9 +113,11 @@ static void scia_fifo_init(SCI_Handle mySci)
     SCI_resetRxFifo(mySci);
     SCI_clearRxFifoInt(mySci);
     SCI_setRxFifoIntLevel(mySci, SCI_FifoLevel_1_Word);
+    //SCI_enableRxFifoInt(mySci);
 
     return;
 }
+
 // 0 for success
 uint16_t uart_putc(uint16_t c) {
     uint16_t r = rb_put(&tx_rb, c);
@@ -120,9 +125,11 @@ uint16_t uart_putc(uint16_t c) {
         tx_active = true;
         if(0 == rb_get(&tx_rb, &c))
             SCI_putDataNonBlocking(mySci, c);
+        SCI_enableTxFifoInt(mySci);
     }
     return r;
 }
+
 // 0 on success
 uint16_t uart_write(uint16_t *data, size_t len) {
     uint16_t r = 0;
@@ -138,6 +145,7 @@ uint16_t uart_write(uint16_t *data, size_t len) {
         tx_active = true;
         if(0 == rb_get(&tx_rb, &c))
             SCI_putData(mySci, c);
+        SCI_enableTxFifoInt(mySci);
     }
     return r;
 }
@@ -153,9 +161,10 @@ __interrupt void sciaTxFifoIsr(void)
     do {
         r = rb_get(&tx_rb, &d);
         if(r == 0) { // success
-            SCI_putDataBlocking(mySci, d);
+            SCI_putDataNonBlocking(mySci, d);
         } else {
             tx_active = false;
+            SCI_disableTxFifoInt(mySci);
         }
     } while(tx_active && SCI_isTxReady(mySci));
 
@@ -170,9 +179,9 @@ __interrupt void sciaTxFifoIsr(void)
 //
 __interrupt void sciaRxFifoIsr(void) {
     RB_ELM_TYPE d;
-    bool overflowed = false;
+    //bool overflowed = false;
 
-    while(SCI_getRxFifoStatus(mySci) != SCI_FifoLevel_Empty) {
+    while(SCI_getRxFifoStatus(mySci) != SCI_FifoStatus_Empty) {
         d = SCI_getData(mySci);
         if(cmdComplete) // disregard if previous CMD has not been handled
             continue;

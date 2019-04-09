@@ -90,6 +90,7 @@
 //
 #include "F2802x_Device.h"     // F2802x Headerfile Include File
 #include "main.h"
+#include "pwm.h"
 
 #include "common/include/clk.h"
 #include "common/include/flash.h"
@@ -195,9 +196,6 @@ void main(void)
     update =1;
     DutyFine =0;
 
-    CLK_disableTbClockSync(myClk);
-    CLK_enableTbClockSync(myClk);
-
     //
     // ePWM and HRPWM register initialization
     //
@@ -211,8 +209,11 @@ void main(void)
         error();
 
     uart_init(myClk, myGpio, myPie);
+    // Finally, enable interrupts?
+    CPU_enableInt(myCpu,  CPU_IntNumber_9); // SCI interrupts
+    CPU_enableGlobalInts(myCpu);
 
-    uart_write("Hello World!\n", 13);
+    uart_write((uint16_t*)"Hello World!\n", 13);
 
     while (update ==1)
     {
