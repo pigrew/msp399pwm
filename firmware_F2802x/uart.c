@@ -24,7 +24,7 @@
 
 static SCI_Handle mySci;
 
-static void scia_fifo_init(SCI_Handle mySci);
+static void scia_fifo_init();
 __interrupt void sciaTxFifoIsr(void);
 __interrupt void sciaRxFifoIsr(void);
 
@@ -49,11 +49,13 @@ void uart_init() {
     tx_rb.buf = txbuf;
     tx_rb.n_bits = TXBUF_BITS;
 
-    GPIO_setPullUp(myGpio, GPIO_Number_28, GPIO_PullUp_Enable);
-    GPIO_setPullUp(myGpio, GPIO_Number_29, GPIO_PullUp_Disable);
-    GPIO_setQualification(myGpio, GPIO_Number_28, GPIO_Qual_ASync);
-    GPIO_setMode(myGpio, GPIO_Number_28, GPIO_28_Mode_SCIRXDA);
-    GPIO_setMode(myGpio, GPIO_Number_29, GPIO_29_Mode_SCITXDA);
+    ENABLE_PROTECTED_REGISTER_WRITE_MODE;
+    GpioCtrlRegs.GPAQSEL2.bit.GPIO28 = GPIO_Qual_ASync;
+    GpioCtrlRegs.GPAPUD.bit.GPIO28 = GPIO_PullUp_Enable;
+    GpioCtrlRegs.GPAPUD.bit.GPIO29 = GPIO_PullUp_Disable;
+    GpioCtrlRegs.GPAMUX2.bit.GPIO28 = GPIO_28_Mode_SCIRXDA;
+    GpioCtrlRegs.GPAMUX2.bit.GPIO29 = GPIO_29_Mode_SCITXDA;
+    DISABLE_PROTECTED_REGISTER_WRITE_MODE;
 
     mySci = SCI_init((void *)SCIA_BASE_ADDR, sizeof(SCI_Obj));
 
@@ -76,18 +78,15 @@ void uart_init() {
     SCI_disableRxFifoInt(mySci);
     SCI_enableTx(mySci);
     SCI_enableRx(mySci);
-    //SCI_enableTxInt(mySci);
-    //SCI_enableRxInt(mySci);
 
-    scia_fifo_init(mySci);
+    scia_fifo_init();
 
-    EALLOW;    // This is needed to write to EALLOW protected registers
+    ENABLE_PROTECTED_REGISTER_WRITE_MODE;
     //PieVectTable.SCIRXINTA = &sciaRxFifoIsr;
     ((PIE_Obj *)myPie)->SCIRXINTA = &sciaRxFifoIsr;
     //PieVectTable.SCITXINTA = &sciaTxFifoIsr;
     ((PIE_Obj *)myPie)->SCITXINTA = &sciaTxFifoIsr;
-    EDIS;      // This is needed to disable write to EALLOW protected registers
-
+    DISABLE_PROTECTED_REGISTER_WRITE_MODE;
     //
     // Driverlib code:
     //
@@ -100,7 +99,7 @@ void uart_init() {
     SCI_enable(mySci);
 }
 
-static void scia_fifo_init(SCI_Handle mySci)
+static void scia_fifo_init()
 {
     SCI_enableFifoEnh(mySci);
     SCI_resetTxFifo(mySci);

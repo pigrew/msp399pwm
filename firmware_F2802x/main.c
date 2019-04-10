@@ -83,7 +83,6 @@
 // $
 //#############################################################################
 
-#include "sfo_v6.h"
 
 //
 // Included Files
@@ -112,19 +111,6 @@ void HRPWM3_Config(Uint16);
 void HRPWM4_Config(Uint16);
 
 static void SetupXtal(PLL_Handle myPll);
-void error (void);
-//
-// Global variable used by the SFO library. Result can be used for all HRPWM
-// channels. This variable is also copied to HRMSTEP register by SFO() function
-//
-int MEP_ScaleFactor;
-
-//
-// Array of pointers to EPwm register structures:
-// *ePWM[0] is defined as dummy value not used in the example
-//
-volatile struct EPWM_REGS *ePWM[PWM_CH] =
-             {  &EPwm1Regs, &EPwm1Regs, &EPwm2Regs, &EPwm3Regs, &EPwm4Regs};
 
 //
 // General System nets - Useful for debug
@@ -148,7 +134,7 @@ void main(void)
     CPU_Handle myCpu;
     PLL_Handle myPll;
     WDOG_Handle myWDog;
-    uint8_t sfoStatus;
+    uint16_t lastTick = 0;
 
     //
     // Initialize all the handles needed for this application
@@ -202,30 +188,33 @@ void main(void)
     //
     pwm_init(myClk, myGpio);        // ePWM1 target, Period = 10
 
-    do
-        sfoStatus = SFO();
-    while (sfoStatus == 0);
-
-    if(sfoStatus == SFO_ERROR)
-        error();
-
     uart_init();
     systick_init(myGpio);
     // Finally, enable interrupts?
     CPU_enableInt(myCpu,  CPU_IntNumber_9); // SCI interrupts
     CPU_enableGlobalInts(myCpu);
 
-    uart_write((uint16_t*)"Hello World!\n", 13);
 
+    uart_write((uint16_t*)"Hello World!\n", 13);
     while (update ==1)
     {
-        sfoStatus = SFO();
-
-        if(sfoStatus == SFO_ERROR)
-            error();
+        if(lastTick != systick_get()) {
+            //char buffer[10];
+            if((systick_get() & 0x007F)== 0) {
+                GpioDataRegs.GPASET.bit.GPIO1 = 1;
+                pwm_tick();
+                GpioDataRegs.GPACLEAR.bit.GPIO1 = 1;
+                lastTick = systick_get();
+            }
+          /*  if(sfoStatus == SFO_COMPLETE) {
+                / *uart_write((uint16_t*)"SFO ", 4);
+                u16hex(MEP_ScaleFactor, buffer, 8);
+                uart_write((uint16_t*)buffer,2);
+                uart_write((uint16_t*)"\n",1);
+                GPIO_toggle(myGpio, GPIO_Number_1);*/
+           // }*/
         }
-
-        IDLE;
+        IDLE; // Wake at either interrupt (100 Hz systick, UART, or timer)
     }
 }
 

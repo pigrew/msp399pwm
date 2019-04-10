@@ -171,6 +171,9 @@ extern CLK_Handle myClk;
 extern GPIO_Handle myGpio;
 extern PIE_Handle myPie;
 
+
+void error (void);
+
 #ifdef __cplusplus
 }
 #endif /* extern "C" */

@@ -12,5 +12,6 @@
 #include "common/include/gpio.h"
 
 void pwm_init(CLK_Handle myClk, GPIO_Handle myGpio);
+void pwm_tick();
 
 #endif /* PWM_H_ */

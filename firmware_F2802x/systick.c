@@ -11,16 +11,16 @@
 #include "main.h"
 
 
-volatile uint16_t systick;
+static volatile uint16_t systick;
 static __interrupt void cpu_timer2_isr(void);
 
 // Use cpu timer 2
 void systick_init() {
     StopCpuTimer2();
 
-    EALLOW;            // This is needed to write to EALLOW protected registers
+    ENABLE_PROTECTED_REGISTER_WRITE_MODE;
     PieVectTable.TINT2 = &cpu_timer2_isr;
-    EDIS;      // This is needed to disable write to EALLOW protected registers
+    DISABLE_PROTECTED_REGISTER_WRITE_MODE;
    // 100 Hz???
     CpuTimer2Regs.PRD.all  = 100ul;
     // prescale by 5000 (0x1338)

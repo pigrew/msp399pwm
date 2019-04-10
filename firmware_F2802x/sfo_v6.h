@@ -41,11 +41,6 @@ extern "C" {
 // USER MUST UPDATE THIS CONSTANT FOR NUMBER OF HRPWM CHANNELS USED
 //
 
-//
-// Equal # of HRPWM channels PLUS 1
-// i.e. PWM_CH is 9 for 8 channels, 7 for 6 channels, etc.
-//
-#define PWM_CH  5
 
 //
 // Function prototypes for MEP SFO
