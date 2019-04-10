@@ -13,8 +13,9 @@ extern "C" {
 #endif
 
 
-#include "common/include/gpio.h"
 #include "common/include/clk.h"
+#include "common/include/gpio.h"
+#include "common/include/pie.h"
 
 //
 // Defines that specify the PLL control register (PLLCR) and divide select
@@ -166,8 +167,9 @@ extern "C" {
                                     (long double)CPU_RATE) - 9.0L) / 5.0L)
 
 
-extern GPIO_Handle myGpio;
 extern CLK_Handle myClk;
+extern GPIO_Handle myGpio;
+extern PIE_Handle myPie;
 
 #ifdef __cplusplus
 }

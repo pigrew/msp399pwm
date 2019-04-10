@@ -209,7 +209,7 @@ void main(void)
     if(sfoStatus == SFO_ERROR)
         error();
 
-    uart_init(myPie);
+    uart_init();
     systick_init(myGpio);
     // Finally, enable interrupts?
     CPU_enableInt(myCpu,  CPU_IntNumber_9); // SCI interrupts
@@ -223,11 +223,9 @@ void main(void)
 
         if(sfoStatus == SFO_ERROR)
             error();
-
-        for (i=0;i<10000;i++)
-        {
-            asm("   NOP");
         }
+
+        IDLE;
     }
 }
 

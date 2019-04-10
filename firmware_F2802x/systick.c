@@ -32,9 +32,6 @@ void systick_init() {
 //    CpuTimer2Regs.TCR |= Cpu;
     IER |= M_INT14; // Timer 2 => Int14
     StartCpuTimer2();
-
-    GPIO_setMode(myGpio, GPIO_Number_1, GPIO_1_Mode_GeneralPurpose);
-    GPIO_setDirection(myGpio, GPIO_Number_1, GPIO_Direction_Output);
 }
 
 uint16_t systick_get() {
@@ -45,5 +42,4 @@ static __interrupt void cpu_timer2_isr(void)
 {
     CpuTimer2Regs.TCR.bit.TIF = 1; // Ack the timer?
     systick++;
-    GPIO_toggle(myGpio, GPIO_Number_1);
 }

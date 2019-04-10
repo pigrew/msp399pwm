@@ -23,7 +23,6 @@
 #define TXBUF_BITS 5
 
 static SCI_Handle mySci;
-static PIE_Handle myPie;
 
 static void scia_fifo_init(SCI_Handle mySci);
 __interrupt void sciaTxFifoIsr(void);
@@ -43,8 +42,7 @@ struct ring_buffer tx_rb;
 
 // Uses RX=GPIO28:SCIRXDA:pin48 , TX=GPIO29:SCITXDA:pin1
 
-void uart_init(PIE_Handle pieHandle) {
-    myPie = pieHandle;
+void uart_init() {
 
     tx_rb.head = 0;
     tx_rb.tail = 0;

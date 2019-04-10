@@ -15,7 +15,7 @@ extern volatile size_t rxBufLen;
 extern volatile RB_ELM_TYPE rxbuf[RXBUF_SIZE + 1]; // room for NULL byte
 extern volatile bool cmdComplete;
 
-void uart_init(PIE_Handle pieHandle);
+void uart_init();
 uint16_t uart_write(uint16_t *data, size_t len);
 void u16hex(uint32_t value, char* result, uint8_t bits);
 
