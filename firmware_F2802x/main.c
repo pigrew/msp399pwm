@@ -91,6 +91,7 @@
 #include "F2802x_Device.h"     // F2802x Headerfile Include File
 #include "main.h"
 #include "pwm.h"
+#include "systick.h"
 
 #include "common/include/clk.h"
 #include "common/include/flash.h"
@@ -208,7 +209,8 @@ void main(void)
     if(sfoStatus == SFO_ERROR)
         error();
 
-    uart_init(myClk, myGpio, myPie);
+    uart_init(myPie);
+    systick_init(myGpio);
     // Finally, enable interrupts?
     CPU_enableInt(myCpu,  CPU_IntNumber_9); // SCI interrupts
     CPU_enableGlobalInts(myCpu);

@@ -12,6 +12,10 @@
 extern "C" {
 #endif
 
+
+#include "common/include/gpio.h"
+#include "common/include/clk.h"
+
 //
 // Defines that specify the PLL control register (PLLCR) and divide select
 // (DIVSEL) value.
@@ -160,6 +164,10 @@ extern "C" {
 //
 #define DELAY_US(A)  DSP28x_usDelay(((((long double) A * 1000.0L) / \
                                     (long double)CPU_RATE) - 9.0L) / 5.0L)
+
+
+extern GPIO_Handle myGpio;
+extern CLK_Handle myClk;
 
 #ifdef __cplusplus
 }

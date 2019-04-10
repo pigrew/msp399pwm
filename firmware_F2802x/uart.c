@@ -43,7 +43,7 @@ struct ring_buffer tx_rb;
 
 // Uses RX=GPIO28:SCIRXDA:pin48 , TX=GPIO29:SCITXDA:pin1
 
-void uart_init(CLK_Handle myClk, GPIO_Handle myGpio, PIE_Handle pieHandle) {
+void uart_init(PIE_Handle pieHandle) {
     myPie = pieHandle;
 
     tx_rb.head = 0;
@@ -113,11 +113,24 @@ static void scia_fifo_init(SCI_Handle mySci)
     SCI_resetRxFifo(mySci);
     SCI_clearRxFifoInt(mySci);
     SCI_setRxFifoIntLevel(mySci, SCI_FifoLevel_1_Word);
-    //SCI_enableRxFifoInt(mySci);
+    SCI_enableRxFifoInt(mySci);
 
     return;
 }
+static uint8_t baseFourChar(uint8_t baseFour) {
+    baseFour = baseFour & 0x0F;
+    if(baseFour < 10)
+        return '0' + baseFour;
+    return 'A' + baseFour - 10;
+}
 
+void u16hex(uint32_t value, char* result, uint8_t bits) {
+    uint8_t i = 0;
+    for( ; bits>0 ; bits-=4) {
+        result[i++] = baseFourChar(value >> (bits-4));
+    }
+    return;
+}
 // 0 for success
 uint16_t uart_putc(uint16_t c) {
     uint16_t r = rb_put(&tx_rb, c);

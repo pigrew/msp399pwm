@@ -29,14 +29,10 @@ void pwm_init(CLK_Handle myClk, GPIO_Handle myGpio) {
     myPwm2 = PWM_init((void *)PWM_ePWM2_BASE_ADDR, sizeof(PWM_Obj));
 
     GPIO_setPullUp(myGpio, GPIO_Number_0, GPIO_PullUp_Disable);
-    GPIO_setPullUp(myGpio, GPIO_Number_1, GPIO_PullUp_Disable);
     GPIO_setMode(myGpio, GPIO_Number_0, GPIO_0_Mode_EPWM1A);
-    GPIO_setMode(myGpio, GPIO_Number_1, GPIO_1_Mode_EPWM1B);
 
     GPIO_setPullUp(myGpio, GPIO_Number_2, GPIO_PullUp_Disable);
-    GPIO_setPullUp(myGpio, GPIO_Number_3, GPIO_PullUp_Disable);
     GPIO_setMode(myGpio, GPIO_Number_2, GPIO_2_Mode_EPWM2A);
-    GPIO_setMode(myGpio, GPIO_Number_3, GPIO_3_Mode_EPWM2B);
 
 
     CLK_enableTbClockSync(myClk);
