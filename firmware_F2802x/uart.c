@@ -121,7 +121,7 @@ static uint8_t baseFourChar(uint8_t baseFour) {
     return 'A' + baseFour - 10;
 }
 
-void u16hex(uint32_t value, char* result, uint8_t bits) {
+void u16hex(uint32_t value, char* result, uint16_t bits) {
     uint8_t i = 0;
     for( ; bits>0 ; bits-=4) {
         result[i++] = baseFourChar(value >> (bits-4));
@@ -141,7 +141,7 @@ uint16_t uart_putc(uint16_t c) {
 }
 
 // 0 on success
-uint16_t uart_write(uint16_t *data, size_t len) {
+uint16_t uart_write(char *data, size_t len) {
     uint16_t r = 0;
     uint16_t i;
     for(i=0; i<len; i++) {

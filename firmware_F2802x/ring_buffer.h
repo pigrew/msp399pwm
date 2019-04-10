@@ -10,7 +10,7 @@
 
 #include <stdlib.h>
 #include <stdint.h>
-
+#include <stdbool.h>
 typedef uint16_t RB_ELM_TYPE;
 
 struct ring_buffer

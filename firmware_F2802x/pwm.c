@@ -129,6 +129,11 @@ void pwm_tick() {
             error();
     }
 }
+void pwm_setRatio(uint32_t ratio) {
+
+    g_ratio = ratio;
+    pwm_applyRatio(g_period);
+}
 // Manual says MEP is number per clock cycle;
 #define MAX_32_D ((double)4294967295.0)
 static void pwm_applyRatio(uint16_t period) {

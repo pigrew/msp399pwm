@@ -91,6 +91,7 @@
 #include "main.h"
 #include "pwm.h"
 #include "systick.h"
+#include "cmd.h"
 
 #include "common/include/clk.h"
 #include "common/include/flash.h"
@@ -195,7 +196,7 @@ void main(void)
     CPU_enableGlobalInts(myCpu);
 
 
-    uart_write((uint16_t*)"Hello World!\n", 13);
+    uart_write("C399PWM\n", 8);
     while (update ==1)
     {
         if(lastTick != systick_get()) {
@@ -206,6 +207,7 @@ void main(void)
                 GpioDataRegs.GPACLEAR.bit.GPIO1 = 1;
                 lastTick = systick_get();
             }
+            processCmds();
           /*  if(sfoStatus == SFO_COMPLETE) {
                 / *uart_write((uint16_t*)"SFO ", 4);
                 u16hex(MEP_ScaleFactor, buffer, 8);
