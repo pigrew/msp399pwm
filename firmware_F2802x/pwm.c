@@ -156,3 +156,12 @@ static void pwm_applyRatio(uint16_t period) {
     EPwm2Regs.CMPA.all = (((uint32_t)CMP2)<<16) | (mep2<<8);
 
 }
+void pwm_applyWhole(uint16_t x) {
+    EPwm1Regs.CMPA.half.CMPA = x;
+    EPwm2Regs.CMPA.half.CMPA = x;
+}
+void pwm_applyMEP(uint16_t x) {
+    uint16_t a = x>>1;
+    EPwm1Regs.CMPA.half.CMPAHR = a;
+    EPwm2Regs.CMPA.half.CMPAHR = x-a;
+}

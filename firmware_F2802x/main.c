@@ -195,6 +195,10 @@ void main(void)
     CPU_enableInt(myCpu,  CPU_IntNumber_9); // SCI interrupts
     CPU_enableGlobalInts(myCpu);
 
+    ENABLE_PROTECTED_REGISTER_WRITE_MODE;
+    GpioCtrlRegs.GPAMUX1.bit.GPIO1 = GPIO_1_Mode_GeneralPurpose;
+    GpioCtrlRegs.GPADIR.bit.GPIO1 = 1; // SET as OUTPUT
+    DISABLE_PROTECTED_REGISTER_WRITE_MODE;
 
     uart_write("C399PWM\n", 8);
     while (update ==1)
