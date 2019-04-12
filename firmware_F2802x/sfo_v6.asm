@@ -27,6 +27,7 @@ L3F7164:
     MOV          @0x36, #0			; *(0x0736) = 0
     MOV          @0x3a, #0			; *(0x073a) = 0
     B            L3F729C, UNC
+L3F7176:
     EALLOW       
     MOV          AL, @0x3a
     SBF          L3f7180, NEQ
@@ -89,6 +90,7 @@ L3F71C3:
     MOVW         DP, #0x1c
     MOVB         @0x38, #0x02, UNC
     B            L3F729C, UNC
+L3F71D0:
     EALLOW       
     MOVW         DP, #0x1a0
     AND          AL, @0x21, #0x10
@@ -99,12 +101,13 @@ L3F71C3:
     MOVW         DP, #0x1c
     MOVB         @0x38, #0x03, UNC
     MOV          @0x36, AL
-    SB           57, UNC
+    SB           L3F7218, UNC
+L3F71E0:
     EALLOW       
     MOV          AL, @0x3a
     MOVW         DP, #0x1a0
     MOVB         @0x22, #0xc8, EQ
-    SBF          14, EQ
+    SBF          L3f71fa, EQ
     SETC         SXM
     MOVW         DP, #0x1c
     MOVL         XAR4, #0x000766
@@ -117,19 +120,22 @@ L3F71C3:
     MOV          @0x24, #0
     MOV          @0x25, #0
     OR           @0x21, #0x0004
+L3f71fa:
     EDIS         
     MOV          *-SP[3], #0
     MOV          AL, *-SP[3]
     CMPB         AL, #0x32
-    SB           5, GEQ
+    SB           L3F7203, GEQ
+L3f71ff:
     INC          *-SP[3]
     MOV          AL, *-SP[3]
     CMPB         AL, #0x32
-    SB           -3, LT
+    SB           L3f71ff, LT
+L3F7203:
     MOVW         DP, #0x1c
     MOVB         @0x38, #0x04, UNC
-    B            149, UNC
-3F7209:
+    B            L3F729C, UNC
+L3F7209:
     EALLOW       
     MOVW         DP, #0x1a0
     AND          AL, @0x21, #0x10
@@ -142,8 +148,8 @@ L3F71C3:
     MOV          @0x35, AL
 L3F7218:
     EDIS         
-    B            131, UNC
-3F721B:
+    B            L3F729C, UNC
+L3F721B:
     MOV          AL, @0x35
     LCR          U$$TOFS
     MOVL         *-SP[2], ACC
@@ -194,14 +200,15 @@ L3F7218:
     CMPB         AL, #0xff
     MOVB         @0x38, #0x01, UNC
     MOVB         *-SP[4], #0x02, GT
-    SB           7, GT
+    SB           L3F726C, GT
     MOV          AL, @0x3b
     MOVW         DP, #0x1a0
     MOVB         *-SP[4], #0x01, UNC
     MOV          @0x26, AL
+L3F726C:
     MOVW         DP, #0x1c
     MOV          AL, @0x3a
-    SBF          45, EQ
+    SBF          L3F729C, EQ
     MOV          ACC, @0x3a << 1
     MOVL         XAR4, #0x000766
     ADDL         @XAR4, ACC
@@ -216,20 +223,20 @@ L3F7218:
     MOVB         XAR0, #0x8
     MOV          AL, @0x39
     MOV          *+XAR4[AR0], AL
-    SB           24, UNC
+    SB           L3F729C, UNC
 L3F7285:
     MOVW         DP, #0x1c			;  DP 0x0700
     MOV          AL, @0x38			; AL = *(0x0738)
     CMPB         AL, #0x3			; Compare mode variable with 3
     SB           L3F7297, GT
     CMPB         AL, #0x3
-    BF           -171, EQ
+    BF           L3F71E0, EQ
     CMPB         AL, #0x0
     BF           L3F7164, EQ
     CMPB         AL, #0x1
-    BF           -283, EQ
+    BF           L3F7176, EQ
     CMPB         AL, #0x2
-    BF           -196, EQ
+    BF           L3F71D0, EQ
     SB           L3F729C, UNC
 L3F7297:
     CMPB         AL, #0x4
