@@ -53,3 +53,7 @@ Debug
 __pycache__
 .ipynb_checkpoints
 /firmware_stm32/Drivers
+/firmware_F2802x/Flash/
+org.eclipse.cdt.codan.core.prefs
+org.eclipse.cdt.debug.core.prefs
+org.eclipse.core.resources.prefs
