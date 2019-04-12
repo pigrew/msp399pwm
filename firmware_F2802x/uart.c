@@ -114,7 +114,7 @@ static void scia_fifo_init()
 
     return;
 }
-static uint8_t baseFourChar(uint8_t baseFour) {
+static char baseFourChar(uint8_t baseFour) {
     baseFour = baseFour & 0x0F;
     if(baseFour < 10)
         return '0' + baseFour;
@@ -122,7 +122,7 @@ static uint8_t baseFourChar(uint8_t baseFour) {
 }
 
 void u16hex(uint32_t value, char* result, uint16_t bits) {
-    uint8_t i = 0;
+    uint16_t i = 0;
     for( ; bits>0 ; bits-=4) {
         result[i++] = baseFourChar(value >> (bits-4));
     }

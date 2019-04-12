@@ -86,8 +86,7 @@ void processCmds() {
         case 'y': // Set PWM ratio
         case 'Y':
             d32 = atoul((char*)&(rxbuf[1]));
-            if(d32 > 0)
-                pwm_applyMEP(d32);
+            pwm_applyMEP(d32);
             break;
         default:
             rsp = 1;
@@ -120,7 +119,7 @@ static uint32_t atoul(char *str) {
 
     // Iterate through all characters of input string and
     // update result
-    while (*str != '\0') {
+    while (*str != '\0' && *str >= '0' && *str <= '9') {
         res = res*10 + (*str - '0');
         str++;
     }
