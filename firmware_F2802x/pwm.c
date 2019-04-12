@@ -115,6 +115,8 @@ void pwm_init() {
         PWM_disableAutoConvert(h); // We know better than the hardware when MEP changes. :)
         PWM_setCounterMode(h, PWM_CounterMode_Up);  // Count up
     }
+    EPwm1Regs.TBCTL.bit.FREE_SOFT = 3; // Continue PWM when debugger pauses code
+    EPwm2Regs.TBCTL.bit.FREE_SOFT = 3; // Continue PWM when debugger pauses code
 
 
     PWM_forceSync(myPwm1);
@@ -162,6 +164,6 @@ void pwm_applyWhole(uint16_t x) {
 }
 void pwm_applyMEP(uint16_t x) {
     uint16_t a = x>>1;
-    EPwm1Regs.CMPA.half.CMPAHR = a;
-    EPwm2Regs.CMPA.half.CMPAHR = x-a;
+    EPwm1Regs.CMPA.half.CMPAHR = a<<8;
+    EPwm2Regs.CMPA.half.CMPAHR = (x-a)<<8;
 }
