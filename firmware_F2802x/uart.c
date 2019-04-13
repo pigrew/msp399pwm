@@ -167,16 +167,20 @@ __interrupt void sciaTxFifoIsr(void)
 {
     RB_ELM_TYPE r, d;
 
-    // more bytes?
-    do {
+
+    // Weirdly, this ISR seems to be called before the the buffer is ready (but the FIFO is empty).
+    // This will cause the ISR to be called repeatedly.
+    while(tx_active && SCI_isTxReady(mySci)) {
         r = rb_get(&tx_rb, &d);
         if(r == 0) { // success
-            SCI_putDataNonBlocking(mySci, d);
+            if(!SCI_putDataNonBlocking(mySci, d)) {
+                error();
+            }
         } else {
             tx_active = false;
             SCI_disableTxFifoInt(mySci);
         }
-    } while(tx_active && SCI_isTxReady(mySci));
+    }
 
     SCI_clearTxFifoInt(mySci);
     PIE_clearInt(myPie, PIE_GROUP_SCIA);
