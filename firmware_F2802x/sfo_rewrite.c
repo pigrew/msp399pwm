@@ -5,8 +5,7 @@
 
 extern int MEP_ScaleFactor;
 
-extern volatile struct EPWM_REGS *ePWM[PWM_CH] =
-             {  &EPwm1Regs, &EPwm1Regs, &EPwm2Regs};
+extern volatile struct EPWM_REGS *ePWM[PWM_CH];
 
 static uint16_t MEP_SF[PWM_CH];
 
@@ -18,7 +17,11 @@ static int state = 0;         // x29/x38
 static uint16_t CMPAHR_save;  // x2a/x39
 static uint16_t ePWM_i;       // x2b/x3a which ePWM to use??? Never changes???
 
-int SFO2() {
+#define LEN_A (0x50)
+#define LEN_B (0xc8)
+// A measurement is performed for these two counts. The slope delta(1/Y)/delta(LEN) seems to be proportional to the MEP count.
+
+int SFO() {
     float a,b,c;
     int retVal = 0;
     uint16_t i;
@@ -38,7 +41,7 @@ int SFO2() {
         ENABLE_PROTECTED_REGISTER_WRITE_MODE;
         if(ePWM_i == 0) {
             EPwm1Regs.HRPWR.all &= ~(0x03c0); // #21 Enable power?
-            EPwm1Regs.rsvd4[0] = 0x50;    // #22
+            EPwm1Regs.rsvd4[0] = LEN_A;    // #22
         } else {
             uint16_t cfg = ePWM[ePWM_i]->HRCNFG.all; // get HRCNFG
             HRCNFG_save = cfg;
@@ -57,7 +60,7 @@ int SFO2() {
         break;
 	case 2:
         ENABLE_PROTECTED_REGISTER_WRITE_MODE;
-        if(0 == EPwm1Regs.HRPWR.all & 0x0010) {
+        if(0 == (EPwm1Regs.HRPWR.all & 0x0010)) {
             EPwm1Regs.HRPWR.all &= ~(0x0004);
             state = 3;
             HR_Result24b = EPwm1Regs.rsvd4[2]; // #24 (approx 35064)
@@ -68,7 +71,7 @@ int SFO2() {
 	case 3:
         ENABLE_PROTECTED_REGISTER_WRITE_MODE;
         if(ePWM_i == 0)
-            EPwm1Regs.rsvd4[0] = 0xc8;  // #22
+            EPwm1Regs.rsvd4[0] = LEN_B;  // #22
         else {
             ePWM[ePWM_i]->CMPA.half.CMPAHR = 0xc800;
         }
@@ -99,7 +102,7 @@ int SFO2() {
 	    b = 1.0f / (float)HR_Result24b;
 	    c = a-b;
 	    c = c*65535.0f;
-	    uint16_t sf = 240.0/c + 0.5;
+	    uint16_t sf = (2*(LEN_B-LEN_A))/c + 0.5;
 
 	    MEP_SF[ePWM_i] = sf; // *+XAR4[0], AR6
         MEP_ScaleFactor = sf;
