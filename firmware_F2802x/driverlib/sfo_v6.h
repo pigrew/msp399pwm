@@ -58,7 +58,7 @@ int SFO(void);             // SFO V6  Calibration Function
 // Multiple include Guard
 #endif // End: Multiple include Guard
 //
-
+#define PWM_CH 5
 //
 // C++ namespace
 //

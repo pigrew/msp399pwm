@@ -37,10 +37,10 @@ SFO_INIT:
     EDIS         
 
     MOVW         DP, #0x1c          ; DP = 0x0001 1100    0700
-    MOVB         @0x38, #0x01, UNC	; *(0x0738) = 1
-    MOV          @0x35, #0			; *(0x0735) = 0
-    MOV          @0x36, #0			; *(0x0736) = 0; state variable?; 0=START; 1=initialized
-    MOV          @0x3a, #0			; *(0x073a) = 0
+    MOVB         @0x38, #0x01, UNC	; *(0x0738) = 1  state variable?; 0=START; 1=initialized
+    MOV          @0x35, #0			; *(0x0735) = 0 HR_Result24a
+    MOV          @0x36, #0			; *(0x0736) = 0 HR_Result24b
+    MOV          @0x3a, #0			; *(0x073a) = 0; ePWM_i???
     B            SFO_END, UNC
 
 SFO_START_MEAS:
@@ -50,7 +50,7 @@ SFO_START_MEAS:
     MOVW         DP, #0x1a0			; ePWM1 page 0x6800
     AND          @0x21, #0xfc3f		; HRPWR &= 0xfc3f (clears 0x03c0)
     MOVB         @0x22, #0x50, UNC	; Secret register??? BASE+0x22 = 0x50
-    SB           L3F71C3, UNC
+    SB           SFO_START_MEAS_CONTINUE, UNC
 
 L3f7180:
     SETC         SXM				; Enable sign-extended mode
@@ -80,8 +80,8 @@ L3f7180:
     MOVL         XAR4, *+XAR4[0]
     MOVW         DP, #0x1a0
     ADDB         XAR4, #32
-    OR           *+XAR4[0], #0x0018
-    AND          AH, @0x21, #0xfc3f
+    OR           *+XAR4[0], #0x0018		; set ePWM[ePWM_i].HRCNFG bits 0x18
+    AND          AH, @0x21, #0xfc3f 	;take the ePWM_i*2, AND with 0xfc37
     MOVW         DP, #0x1c
     MOVL         XAR4, #0x000766
     MOV          AL, @0x3a
@@ -98,7 +98,7 @@ L3f7180:
     MOVL         XAR4, *+XAR4[0]
     MOV          *+XAR4[AR0], #0x5000
 
-L3F71C3:
+SFO_START_MEAS_CONTINUE:
     MOVW         DP, #0x1a0				; ePWM1 page
     MOV          @0x24, #0				; Secret Reg 0x24 = 0
     MOV          @0x25, #0				; Secret Reg 0x25 = 0
@@ -108,25 +108,26 @@ L3F71C3:
     MOVB         @0x38, #0x02, UNC		; Update 0x0738=2 (next state)
     B            SFO_END, UNC			; end
 
-L3F71D0:
+SFO_RUN_2:
     EALLOW       
     MOVW         DP, #0x1a0
     AND          AL, @0x21, #0x10
     LSR          AL, 4
-    SBF          L3F7218, NEQ
+    SBF          SFO_EDIS_RETURN, NEQ
     AND          @0x21, #0xfffb
     MOV          AL, @0x24
     MOVW         DP, #0x1c
     MOVB         @0x38, #0x03, UNC
     MOV          @0x36, AL
-    SB           L3F7218, UNC
-L3F71E0:
+    SB           SFO_EDIS_RETURN, UNC
+SFO_RUN_3:
     EALLOW       
-    MOV          AL, @0x3a
+    MOV          AL, @0x3a			; Load epwm_i
     MOVW         DP, #0x1a0
-    MOVB         @0x22, #0xc8, EQ
-    SBF          L3f71fa, EQ
-    SETC         SXM
+    MOVB         @0x22, #0xc8, EQ	; Set secretReg22 if 0xc8 if epwm_i==0
+    SBF          L3f71fa, EQ		; and jump if epwm_i==0
+
+    SETC         SXM				;; other stuff if epwm_i != 0
     MOVW         DP, #0x1c
     MOVL         XAR4, #0x000766
     MOV          ACC, @0x3a << 1
@@ -145,7 +146,7 @@ L3f71fa:
     CMPB         AL, #0x32
     SB           L3F7203, GEQ
 L3f71ff:
-    INC          *-SP[3]
+    INC          *-SP[3]				; Delay loop, up to 0x32. Seems weird.
     MOV          AL, *-SP[3]
     CMPB         AL, #0x32
     SB           L3f71ff, LT
@@ -153,18 +154,18 @@ L3F7203:
     MOVW         DP, #0x1c
     MOVB         @0x38, #0x04, UNC
     B            SFO_END, UNC
-L3F7209:
+SFO_RUN_4:
     EALLOW       
     MOVW         DP, #0x1a0			; ePWM1
     AND          AL, @0x21, #0x10	;
     LSR          AL, 4				;AL = HRPWR & 0x10 >> 4
-    SBF          L3F7218, NEQ		; Skip recording != 0
+    SBF          SFO_EDIS_RETURN, NEQ		; Skip recording != 0
     AND          @0x21, #0xfffb		; HRPWR &= 0xFFFB (clear bit #2)
     MOV          AL, @0x24			; AL = ePWMReg#24
     MOVW         DP, #0x1c			;
     MOVB         @0x38, #0x05, UNC	; State = 5
     MOV          @0x35, AL			; Record reg#24 into 0x0735
-L3F7218:
+SFO_EDIS_RETURN:
     EDIS         
     B            SFO_END, UNC		; and return...
 SFO_FINISH:
@@ -202,20 +203,20 @@ SFO_FINISH:
     MOVL         ACC, @XAR6			;														acc = 151.58
     LCR          FS$$ADD			;	acc += 0.5											acc=152.08
     LCR          FS$$TOI			;	convert to int										acc=0x98
-    MOVZ         AR6, @AL			;														ar6=0x98 (MEP count)
+    MOVZ         AR6, @AL			; ar6 is newly calculated MEP count						ar6=0x98 (MEP count)
     SETC         SXM				; enable sign extended multiply
-    MOVW         DP, #0x1c			; globals page
+    MOVW         DP, #0x1c			; ePWM1 page
     MOVL         XAR4, #0x00073b	; xar4 = 0x00073b (address of MEP_SF array)
     MOV          ACC, @0x3a			; ACC = SFO_CAL
-    ADDL         @XAR4, ACC			; SFO_SF[0] = ??
+    ADDL         @XAR4, ACC			;
     MOV          *+XAR4[0], AR6     ; SFO_SF[0] = new MEP count?
-
+/*
     EALLOW       
     MOV          AL, @0x3b			; AL = SFO_SF[0] (old one???)
     MOVW         DP, #0x1d
     MOV          @0x1e, AL			; MEP_ScaleFactor = new scale factor
     EDIS
-
+*/
     MOVW         DP, #0x1c
     CMPB         AL, #0xff
     MOVB         @0x38, #0x01, UNC	; Compare scale factor to 0xFF
@@ -230,13 +231,14 @@ SKIP_REG_UPDATE:
     MOVW         DP, #0x1c
     MOV          AL, @0x3a			; AL = 0x0738
     SBF          SFO_END, EQ		; Return if  (0x0738 == 0)
+
     MOV          ACC, @0x3a << 1	;ACC = *0x38 << 1
     MOVL         XAR4, #0x000766	; Maybe iterate over the list of SFO structures?
     ADDL         @XAR4, ACC
     MOVL         XAR4, *+XAR4[0]
-    MOVB         XAR0, #0x20
-    MOV          AL, @0x37
-    MOV          *+XAR4[AR0], AL
+    MOVB         XAR0, #0x20		; x20 is .CMPAHR
+    MOV          AL, @0x37			; Load old config
+    MOV          *+XAR4[AR0], AL    ;
     MOV          ACC, @0x3a << 1
     MOVL         XAR4, #0x000766
     ADDL         @XAR4, ACC
@@ -256,7 +258,7 @@ SFO_ENTRY:
     SB           SFO_ENTRY_CONTINUED, GT
 
     CMPB         AL, #0x3           ; 3 =>
-    BF           L3F71E0, EQ
+    BF           SFO_RUN_3, EQ
 
     CMPB         AL, #0x0			; 0 => Need to initilize?
     BF           SFO_INIT, EQ
@@ -265,13 +267,13 @@ SFO_ENTRY:
     BF           SFO_START_MEAS, EQ
 
     CMPB         AL, #0x2			; 2 =>
-    BF           L3F71D0, EQ
+    BF           SFO_RUN_2, EQ
 
     SB           SFO_END, UNC
 
 SFO_ENTRY_CONTINUED:
     CMPB         AL, #0x4			; 4=>
-    BF           L3F7209, EQ
+    BF           SFO_RUN_4, EQ
 
     CMPB         AL, #0x5			; 5=> Finish run
     SBF          SFO_FINISH, EQ

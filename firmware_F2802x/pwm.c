@@ -26,9 +26,9 @@ PWM_Handle myPwm1, myPwm2;
 // Equal # of HRPWM channels PLUS 1
 // i.e. PWM_CH is 9 for 8 channels, 7 for 6 channels, etc.
 //
-#define PWM_CH  3
+
 volatile struct EPWM_REGS *ePWM[PWM_CH] =
-             {  &EPwm1Regs, &EPwm1Regs, &EPwm2Regs};
+             {  &EPwm1Regs, &EPwm1Regs, &EPwm2Regs, &EPwm3Regs, &EPwm4Regs};
 int MEP_ScaleFactor;
 #pragma DATA_ALIGN(MEP_ScaleFactor,2); // Align for MAC usage
 
