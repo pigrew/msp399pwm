@@ -21,6 +21,19 @@ static uint16_t ePWM_i;       // x2b/x3a which ePWM to use??? Never changes???
 #define LEN_B (0xc8)
 // A measurement is performed for these two counts. The slope delta(1/Y)/delta(LEN) seems to be proportional to the MEP count.
 
+#define HRCNFG_HRLOAD_TEST  (0x0018)
+#define HRCNFG_EDGMODE_MASK (0x0003)
+
+// The MEP cal channel to use is encoded here.
+// If CH is all 1, then the extra test channel is used.
+#define HRPWR_CAL_PWR       (0x0200)
+#define HRPWR_CAL_CH        (0x01c0)
+#define HRPWR_MEPOFF_MASK   (0x03c0)
+
+#define HRPWR_DONE          (0x0010)
+#define HRPWR_MEASURE       (0x0004)
+
+
 int SFO() {
     float a,b,c;
     int retVal = 0;
@@ -43,12 +56,11 @@ int SFO() {
             EPwm1Regs.HRPWR.all &= ~(0x03c0); // #21 Enable power?
             EPwm1Regs.rsvd4[0] = LEN_A;    // #22
         } else {
-            uint16_t cfg = ePWM[ePWM_i]->HRCNFG.all; // get HRCNFG
-            HRCNFG_save = cfg;
+            HRCNFG_save = ePWM[ePWM_i]->HRCNFG.all;
             CMPAHR_save = ePWM[ePWM_i]->CMPA.half.CMPAHR;
-            ePWM[ePWM_i]->HRCNFG.all &= ~(0x0003); //change config, disable edge mode bits?
-            ePWM[ePWM_i]->HRCNFG.all |= 0x0018; //change config, disable edge mode bits?
-            uint16_t ah = EPwm1Regs.HRPWR.all & ~(0x03c0); // enable power???
+            ePWM[ePWM_i]->HRCNFG.all &= ~(HRCNFG_EDGMODE_MASK);          // disable edge mode bits?
+            ePWM[ePWM_i]->HRCNFG.all |= HRCNFG_HRLOAD_TEST;         // Enable test mode?
+            uint16_t ah = EPwm1Regs.HRPWR.all & ~(HRPWR_MEPOFF_MASK);    // enable power
             EPwm1Regs.HRPWR.all = (((ePWM_i-1)|0x0008) & 0x000f)<<6 | ah;
             ePWM[ePWM_i]->CMPA.half.CMPAHR = 0x5000;
         }
@@ -61,7 +73,7 @@ int SFO() {
 	case 2:
         ENABLE_PROTECTED_REGISTER_WRITE_MODE;
         if(0 == (EPwm1Regs.HRPWR.all & 0x0010)) {
-            EPwm1Regs.HRPWR.all &= ~(0x0004);
+            EPwm1Regs.HRPWR.all &= ~(HRPWR_MEASURE);
             state = 3;
             HR_Result24b = EPwm1Regs.rsvd4[2]; // #24 (approx 35064)
         }
@@ -77,7 +89,7 @@ int SFO() {
         }
         EPwm1Regs.rsvd4[2] = 0;
         EPwm1Regs.rsvd4[3] = 0;
-        EPwm1Regs.HRPWR.all |= 0x0004;
+        EPwm1Regs.HRPWR.all |= HRPWR_MEASURE;
         DISABLE_PROTECTED_REGISTER_WRITE_MODE;
 
         for(i=0; i<0x32; i++) {
@@ -87,8 +99,8 @@ int SFO() {
         state = 4;
 	case 4:
 	    ENABLE_PROTECTED_REGISTER_WRITE_MODE;
-	    if(((EPwm1Regs.HRPWR.all & 0x0010)>>4) == 0) {
-	        EPwm1Regs.HRPWR.all &= ~(0x0004); // clear bit 2
+	    if(((EPwm1Regs.HRPWR.all & HRPWR_DONE)>>4) == 0) {
+	        EPwm1Regs.HRPWR.all &= ~(HRPWR_MEASURE); // clear bit 2
 	        HR_Result24a = EPwm1Regs.rsvd4[2]; // #24
 	        state = 5;
 	    }

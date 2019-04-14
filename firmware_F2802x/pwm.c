@@ -26,9 +26,9 @@ PWM_Handle myPwm1, myPwm2;
 // Equal # of HRPWM channels PLUS 1
 // i.e. PWM_CH is 9 for 8 channels, 7 for 6 channels, etc.
 //
-
+/*
 volatile struct EPWM_REGS *ePWM[PWM_CH] =
-             {  &EPwm1Regs, &EPwm1Regs, &EPwm2Regs, &EPwm3Regs, &EPwm4Regs};
+             {  &EPwm1Regs, &EPwm1Regs, &EPwm2Regs, &EPwm3Regs, &EPwm4Regs};*/
 int MEP_ScaleFactor;
 #pragma DATA_ALIGN(MEP_ScaleFactor,2); // Align for MAC usage
 
@@ -140,16 +140,20 @@ void pwm_setRatio(uint32_t ratio) {
 #define MAX_32_D ((double)4294967295.0)
 static void pwm_applyRatio(uint16_t period) {
     uint32_t high0;
+    uint32_t count;
+    uint64_t high;
+    uint16_t CMP1, CMP2;
+    uint16_t mep1, mep2;
     high0 = ((uint32_t)(uint16_t)period) * ((uint32_t)(uint16_t)(MEP_ScaleFactor));
-    uint64_t high = (((uint64_t)high0) * ((uint64_t)g_ratio)) << 1;
+    high = (((uint64_t)high0) * ((uint64_t)g_ratio)) << 1;
     high += (1ul<<31)-1u;
-    uint32_t count = high>>32;
-    uint16_t CMP1 = (count / ((uint16_t)MEP_ScaleFactor))>>1;
-    uint16_t CMP2 = CMP1;
+    count = high>>32;
+    CMP1 = (count / ((uint16_t)MEP_ScaleFactor))>>1;
+    CMP2 = CMP1;
 
     count -= (((uint32_t)CMP1)*((uint32_t)MEP_ScaleFactor))<<1;
-    uint16_t mep1 = count/2;
-    uint16_t mep2 = count-mep1;
+    mep1 = count/2;
+    mep2 = count-mep1;
     if(mep2 == MEP_ScaleFactor) {
         CMP2 = CMP2 + 1;
         mep2 = 0;
