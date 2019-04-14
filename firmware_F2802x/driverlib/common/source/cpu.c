@@ -59,7 +59,7 @@ CPU_Obj cpu;
 // CPU_clearIntFlags - 
 //
 void
-CPU_clearIntFlags(CPU_Handle cpuHandle)
+CPU_clearIntFlags(CPU_Handle cpuHandle __attribute__((unused)))
 {
     //
     // clear the bits
@@ -73,7 +73,7 @@ CPU_clearIntFlags(CPU_Handle cpuHandle)
 // CPU_disableDebugInt - 
 //
 void
-CPU_disableDebugInt(CPU_Handle cpuHandle)
+CPU_disableDebugInt(CPU_Handle cpuHandle __attribute__((unused)))
 {
     //
     // set the bit
@@ -87,7 +87,7 @@ CPU_disableDebugInt(CPU_Handle cpuHandle)
 // CPU_disableGlobalInts - 
 //
 void
-CPU_disableGlobalInts(CPU_Handle cpuHandle)
+CPU_disableGlobalInts(CPU_Handle cpuHandle __attribute__((unused)))
 {
     //
     // set the bit
@@ -101,7 +101,7 @@ CPU_disableGlobalInts(CPU_Handle cpuHandle)
 // CPU_disableInt -
 //
 void
-CPU_disableInt(CPU_Handle cpuHandle, const CPU_IntNumber_e intNumber)
+CPU_disableInt(CPU_Handle cpuHandle __attribute__((unused)), const CPU_IntNumber_e intNumber)
 {
     //
     // clear the bit
@@ -115,7 +115,7 @@ CPU_disableInt(CPU_Handle cpuHandle, const CPU_IntNumber_e intNumber)
 // CPU_disableInts - 
 //
 void
-CPU_disableInts(CPU_Handle cpuHandle)
+CPU_disableInts(CPU_Handle cpuHandle __attribute__((unused)))
 {
     //
     // clear the bits
@@ -129,7 +129,7 @@ CPU_disableInts(CPU_Handle cpuHandle)
 // CPU_disableProtectedRegisterWrite - 
 //
 void
-CPU_disableProtectedRegisterWrite(CPU_Handle cpuHandle)
+CPU_disableProtectedRegisterWrite(CPU_Handle cpuHandle __attribute__((unused)))
 {
     //
     // clear the bits
@@ -143,7 +143,7 @@ CPU_disableProtectedRegisterWrite(CPU_Handle cpuHandle)
 // CPU_enableDebugInt - 
 //
 void
-CPU_enableDebugInt(CPU_Handle cpuHandle)
+CPU_enableDebugInt(CPU_Handle cpuHandle __attribute__((unused)))
 {
     //
     // clear the bit
@@ -157,7 +157,7 @@ CPU_enableDebugInt(CPU_Handle cpuHandle)
 // CPU_enableGlobalInts -
 //
 void
-CPU_enableGlobalInts(CPU_Handle cpuHandle)
+CPU_enableGlobalInts(CPU_Handle cpuHandle __attribute__((unused)))
 {
     //
     // clear the bit
@@ -171,7 +171,7 @@ CPU_enableGlobalInts(CPU_Handle cpuHandle)
 // CPU_enableInt - 
 //
 void
-CPU_enableInt(CPU_Handle cpuHandle, const CPU_IntNumber_e intNumber)
+CPU_enableInt(CPU_Handle cpuHandle __attribute__((unused)), const CPU_IntNumber_e intNumber)
 {
     //
     // set the interrupt 
@@ -185,7 +185,7 @@ CPU_enableInt(CPU_Handle cpuHandle, const CPU_IntNumber_e intNumber)
 // CPU_enableProtectedRegisterWrite -
 //
 void
-CPU_enableProtectedRegisterWrite(CPU_Handle cpuHandle)
+CPU_enableProtectedRegisterWrite(CPU_Handle cpuHandle __attribute__((unused)))
 {
     //
     // set the bits
