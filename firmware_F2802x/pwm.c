@@ -125,7 +125,7 @@ void pwm_init() {
 }
 
 void pwm_tick() {
-    if((systick_get() & 0x007F)== 0) {
+    if((systick_get() & 0x0003)== 0) {
         int sfoStatus = SFO();
 
         if(sfoStatus == SFO_ERROR)

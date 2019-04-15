@@ -81,7 +81,7 @@ void processCmds() {
         case 'x': // Set PWM ratio
         case 'X':
             d32 = atoul((char*)&(rxbuf[1]));
-            if(d32 > 10)
+            if(d32 >= 3)
                 pwm_applyWhole(d32);
             break;
         case 'y': // Set PWM ratio
