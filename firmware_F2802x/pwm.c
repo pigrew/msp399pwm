@@ -17,7 +17,6 @@
 #include "systick.h"
 
 
-PWM_Handle myPwm1, myPwm2;
 //
 // Array of pointers to EPwm register structures:
 // *ePWM[0] is defined as dummy value not used in the example
@@ -34,7 +33,7 @@ uint16_t MEP_ScaleFactor_16;
 #pragma DATA_ALIGN(MEP_ScaleFactor,2); // Align for MAC usage
 
 static uint16_t g_period   = 0xFFFE;
-static uint32_t g_duration = 0xB5FCDD00;
+//static uint32_t g_duration = 0xB5FCDD00;
 static uint32_t g_ratio = 0xB5FCDD7F;
 #pragma DATA_ALIGN(g_period,2); // Align for MAC usage
 #pragma DATA_ALIGN(g_ratio,2); // Align for MAC usage
@@ -44,9 +43,6 @@ static void pwm_applyRatio(uint16_t period);
 void pwm_init() {
     uint32_t ch;
     int sfoStatus;
-
-    myPwm1 = PWM_init((void *)PWM_ePWM1_BASE_ADDR, sizeof(PWM_Obj));
-    myPwm2 = PWM_init((void *)PWM_ePWM2_BASE_ADDR, sizeof(PWM_Obj));
 
     ENABLE_PROTECTED_REGISTER_WRITE_MODE;
     GpioCtrlRegs.GPAPUD.bit.GPIO0 = GPIO_PullUp_Disable;
@@ -61,11 +57,12 @@ void pwm_init() {
     CLK_enablePwmClock(myClk, PWM_Number_2);
     CLK_enableHrPwmClock(myClk);
 
+    /*
     PWM_setPeriodLoad(myPwm1, PWM_PeriodLoad_Immediate);
     PWM_setPeriodLoad(myPwm2, PWM_PeriodLoad_Immediate);
     PWM_setPeriod(myPwm1, g_period);    // Set timer period to max
     EPwm2Regs.CMPA.all = g_duration & 0xFFF0;
-
+     */
     do
         sfoStatus = SFO();
     while (sfoStatus == 0);
@@ -74,53 +71,51 @@ void pwm_init() {
         error();
 
     for(ch=0; ch<2; ch++) {
-        PWM_Handle h;
-        if(ch==0)
-            h = myPwm1;
-        else
-            h = myPwm2;
+        volatile struct EPWM_REGS *pwmRegs;
 
-        PWM_setPeriod(h, g_period);
+        if(ch==0) {
+            pwmRegs = &EPwm1Regs;
+        } else {
+            pwmRegs = &EPwm2Regs;
+        }
+        pwmRegs->TBPRD = g_period;
 
-        PWM_setCmpA(h, g_duration>>16);
-        PWM_setCmpAHr(h, (uint8_t)(g_duration & 0xFF00));
+        // Default CMPA to 50% duty cycle
+        pwmRegs->CMPA.half.CMPA = g_period>>1;
+        pwmRegs->CMPA.half.CMPAHR = 0;
+
+        pwmRegs->TBPHS.half.TBPHSHR = 0x0000;
         if(ch == 0)
-            PWM_setPhase(h, 0x0000);       // Phase is 0
+            pwmRegs->TBPHS.half.TBPHS = 0x0000;       // Phase is 0
         else
-            PWM_setPhase(h, g_period/2);       // Phase is 0
-        PWM_setCount(h, 0x0000);       // Clear counter
+            pwmRegs->TBPHS.half.TBPHS = g_period>>1;       // Phase offset of 180 degrees
 
-        PWM_enableCounterLoad(h);                  // Enable phase loading
+        pwmRegs->TBCTR = 0x0000;       // Clear counter
 
-        PWM_setSyncMode(h, PWM_SyncMode_EPWMxSYNC); // Allow software-sync output?
-        PWM_setHighSpeedClkDiv(h, PWM_HspClkDiv_by_1);
+        pwmRegs->TBCTL.all = PWM_RunMode_FreeRun | PWM_ClkDiv_by_1 | PWM_HspClkDiv_by_1 | PWM_SyncMode_EPWMxSYNC
+                | PWM_PeriodLoad_Shadow | PWM_TBCTL_PHSEN_BITS | PWM_CounterMode_Stop;
 
-        PWM_setClkDiv(h, PWM_ClkDiv_by_1);
+        pwmRegs->CMPCTL.bit.SHDWAMODE = CC_SHADOW;
+        pwmRegs->CMPCTL.bit.SHDWBMODE = CC_SHADOW;
 
+        pwmRegs->CMPCTL.bit.LOADAMODE = CC_CTR_ZERO;
+        pwmRegs->CMPCTL.bit.LOADBMODE = CC_CTR_ZERO;
 
-        PWM_setShadowMode_CmpA(h, PWM_ShadowMode_Shadow);
-        PWM_setShadowMode_CmpB(h, PWM_ShadowMode_Shadow);
-        PWM_setLoadMode_CmpA(h, PWM_LoadMode_Zero);
-        PWM_setLoadMode_CmpB(h, PWM_LoadMode_Zero);
+        pwmRegs->AQCTLA.bit.ZRO = AQ_SET;   // Zero
+        pwmRegs->AQCTLA.bit.CAU = AQ_CLEAR; // CountUp, CMPA
 
-        PWM_setActionQual_Zero_PwmA(h, PWM_ActionQual_Set);
-        PWM_setActionQual_CntUp_CmpA_PwmA(h, PWM_ActionQual_Clear);
-        PWM_setActionQual_Zero_PwmB(h, PWM_ActionQual_Clear);
-        PWM_setActionQual_CntUp_CmpB_PwmB(h, PWM_ActionQual_Set);
+        pwmRegs->AQCTLB.bit.ZRO = AQ_CLEAR; // Zero
+        pwmRegs->AQCTLB.bit.CAU = AQ_SET;   // CountUp, CMPA
 
-        //
-        PWM_setHrEdgeMode(h, PWM_HrEdgeMode_Falling);
+        ENABLE_PROTECTED_REGISTER_WRITE_MODE;
+        // We know better than the hardware when MEP changes. :)
+        pwmRegs->HRCNFG.all &= ~(PWM_HRCNFG_HRLOAD_BITS | PWM_HRCNFG_CTLMODE_BITS | PWM_HRCNFG_EDGMODE_BITS | PWM_HRCNFG_AUTOCONV_BITS);
+        pwmRegs->HRCNFG.all |= PWM_HrShadowMode_CTR_EQ_0 | PWM_HrControlMode_Duty | PWM_HrEdgeMode_Falling;
+        DISABLE_PROTECTED_REGISTER_WRITE_MODE;
 
-        PWM_setHrControlMode(h, PWM_HrControlMode_Duty);
-        PWM_setHrShadowMode(h, PWM_HrShadowMode_CTR_EQ_0);
-        PWM_disableAutoConvert(h); // We know better than the hardware when MEP changes. :)
-        PWM_setCounterMode(h, PWM_CounterMode_Up);  // Count up
+        pwmRegs->TBCTL.all &= ~(PWM_TBCTL_CTRMODE_BITS);  // Count up and start!
     }
-    EPwm1Regs.TBCTL.bit.FREE_SOFT = 3; // Continue PWM when debugger pauses code
-    EPwm2Regs.TBCTL.bit.FREE_SOFT = 3; // Continue PWM when debugger pauses code
-
-
-    PWM_forceSync(myPwm1);
+    EPwm1Regs.TBCTL.all  |= PWM_TBCTL_SWFSYNC_BITS; // Force synchronization of counters
     pwm_applyRatio(g_period);
 }
 
