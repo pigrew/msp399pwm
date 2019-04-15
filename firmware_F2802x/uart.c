@@ -72,6 +72,10 @@ void uart_init() {
     SCI_setBaudRate(mySci, (SCI_BaudRate_e)26);
 #elif (CPU_FRQ_40MHZ)
     SCI_setBaudRate(mySci, (SCI_BaudRate_e)129);
+#elif (CPU_FRQ_42p5MHZ)
+    SCI_setBaudRate(mySci, (SCI_BaudRate_e)30);
+#else
+#error Unknown CPU freq for UART
 #endif
 
     SCI_disableTxFifoInt(mySci);
@@ -127,6 +131,29 @@ void u16hex(uint32_t value, char* result, uint16_t bits) {
         result[i++] = baseFourChar(value >> (bits-4));
     }
     return;
+}
+// Max is 65,536
+uint16_t u16dec(uint32_t value, char* result) {
+    uint32_t r;
+    r=value/10000;
+    result[0] = r + '0';
+    value -=10000*r;
+
+    r=value/1000;
+    result[1] = r + '0';
+    value -=1000*r;
+
+    r=value/100;
+    result[2] = r + '0';
+    value -=100*r;
+
+    r=value/10;
+    result[3] = r + '0';
+    value -=10*r;
+
+    result[4] = value + '0';
+
+    return 5;
 }
 // 0 for success
 uint16_t uart_putc(uint16_t c) {

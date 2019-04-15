@@ -30,6 +30,8 @@
 #ifndef _SFO_V6_H
 #define _SFO_V6_H
 
+#include <stdint.h>
+
 //
 // C++ namespace
 //
@@ -46,7 +48,7 @@ extern "C" {
 // Function prototypes for MEP SFO
 //
 int SFO(void);             // SFO V6  Calibration Function
-
+void SFO_TEST();
 //
 // Useful Defines when Using SFO Functions
 //
@@ -59,6 +61,10 @@ int SFO(void);             // SFO V6  Calibration Function
 #endif // End: Multiple include Guard
 //
 #define PWM_CH 5
+
+extern uint16_t MEP_ScaleFactor;
+extern uint16_t MEP_ScaleFactor_16; // 16-bit version
+
 //
 // C++ namespace
 //

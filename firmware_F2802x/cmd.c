@@ -9,7 +9,8 @@
 //#include "main.h"
 #include "uart.h"
 #include "pwm.h"
-
+#include "SFO_v6.h"
+/*
 static void write_temps(void) {
 
     char str[8];
@@ -23,7 +24,7 @@ static void write_temps(void) {
     u16hex(rt,(char*)str,16);
     uart_write(str, 4);
     uart_write("\n",1);
-}
+}*/
 static uint32_t atoul(char *str);
 void processCmds() {
     char str[8];
@@ -57,8 +58,8 @@ void processCmds() {
         case 'm': // Request MEP
         case 'M':
             uart_write("M",1);
-            u16hex(MEP_ScaleFactor,str,8);
-            uart_write(str,2);
+            u16hex(MEP_ScaleFactor_16,str,16);
+            uart_write(str,4);
             uart_write("\n",1);
             rsp = 3;
             break;
@@ -99,7 +100,7 @@ end:
         uart_write("OK\n", 3);
         break;
     case 2:
-        write_temps();
+        //write_temps();
         break;
     case 3: // do nothing... already done above.
         break;

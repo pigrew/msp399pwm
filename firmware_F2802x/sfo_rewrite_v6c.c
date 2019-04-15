@@ -1,21 +1,29 @@
+#include <stdint.h>
 
 #include "F2802x_Device.h"     // F2802x Headerfile Include File
+#include "f2802x_globalprototypes.h"
 #include "cpu.h"
 #include "sfo_v6.h"
 
 // Modified implementation. Much dead code removed.
 // No need for the ePWM registers, anymore.
 
-extern int MEP_ScaleFactor;
-float MEP_SF_float;
+
 // page 1e
 static uint16_t HR_Result24a; // x26/x35
 static uint16_t HR_Result24b; // x27/x36
 static int state = 0;         // x29/x38
 
 #define LEN_A (0x50)
+// Too large of a value could cause an overfow.
 #define LEN_B (0xc8)
 // A measurement is performed for these two counts. The slope delta(1/Y)/delta(LEN) seems to be proportional to the MEP count.
+// The result has some quantization error (or something like that). It
+// seems that values which are multiples of 20 are all "in phase" with
+// eachother.
+// 40 (0x28) may be a good low value.
+// It's unclear what the best values would be, so we'll leave it
+// with the TI defaults...
 
 // Registers:
 // HRPWR (0x021).0x0004 : Start measurement/stop measurement
@@ -41,7 +49,7 @@ static int state = 0;         // x29/x38
 #define HRPWR_MEASURE       (0x0004)
 
 int SFO() {
-    float a,b,c;
+    float a,b,c,d;
     int retVal = SFO_INCOMPLETE;
 	switch(state) {
 	case 0: // Initialization
@@ -99,8 +107,9 @@ int SFO() {
 	    a = 1.0f / (float)HR_Result24a;
 	    b = 1.0f / (float)HR_Result24b;
 	    c = (b-a)*65535.0f; // Rsvd[4] always equals 0xFFFF at this point.
-	    MEP_SF_float = (2.0f*(LEN_B-LEN_A))/c;
-        MEP_ScaleFactor = (uint16_t)(MEP_SF_float + 0.5f);
+	    d = (2.0f*(LEN_B-LEN_A))/c;
+        MEP_ScaleFactor_16 = (uint16_t)(d*256.0+0.5f);
+        MEP_ScaleFactor = (uint16_t)(d + 0.5f);
         if(MEP_ScaleFactor > 0xFF) {
 	        retVal = SFO_ERROR;
 	    } else {

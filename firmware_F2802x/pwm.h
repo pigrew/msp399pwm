@@ -12,8 +12,6 @@
 #include "common/include/clk.h"
 #include "common/include/gpio.h"
 
-extern int MEP_ScaleFactor;
-
 void pwm_init(CLK_Handle myClk, GPIO_Handle myGpio);
 void pwm_tick();
 void pwm_setRatio(uint32_t ratio);

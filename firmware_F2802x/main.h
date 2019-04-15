@@ -118,8 +118,9 @@ extern "C" {
 // 28026||28027 devices only
 //
 #define CPU_FRQ_60MHZ    0     // 60 Mhz CPU Freq (10 MHz input clock)
-#define CPU_FRQ_50MHZ    1
+#define CPU_FRQ_50MHZ    0
 #define CPU_FRQ_40MHZ    0
+#define CPU_FRQ_42p5MHZ  1
 
 //
 // The following pointer to a function call calibrates the ADC and internal

@@ -18,6 +18,7 @@ extern volatile bool cmdComplete;
 void uart_init();
 uint16_t uart_write(char *data, size_t len);
 void u16hex(uint32_t value, char* result, uint16_t bits);
+uint16_t u16dec(uint32_t value, char* result);
 
 
 #endif /* UART_H_ */

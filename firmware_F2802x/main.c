@@ -102,7 +102,7 @@
 #include "common/include/wdog.h"
 
 #include "uart.h"
-
+#include "sfo_v6.h"
 //
 // Function prototypes
 //
@@ -248,7 +248,7 @@ static void SetupXtal(PLL_Handle myPll) {
 
     // Setup the PLL for x12 /2 which will yield 60Mhz = 10Mhz * 12 / 2
     //
-    PLL_setup(myPll, PLL_Multiplier_8, PLL_DivideSelect_ClkIn_by_4);
+    PLL_setup(myPll, PLL_Multiplier_9, PLL_DivideSelect_ClkIn_by_4);
 
 }
 
