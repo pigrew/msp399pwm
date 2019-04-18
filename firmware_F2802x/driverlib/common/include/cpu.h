@@ -92,19 +92,19 @@ extern "C" {
 
 //! \brief Define to allow protected register writes (legacy)
 //!
-#define  EALLOW asm(" EALLOW")
+#define  EALLOW do {__eallow();} while(0)
 
 //! \brief Define to allow protected register writes
 //!
-#define  ENABLE_PROTECTED_REGISTER_WRITE_MODE  asm(" EALLOW")
+#define  ENABLE_PROTECTED_REGISTER_WRITE_MODE  do {__eallow();} while(0)
 
 //! \brief Define to disable protected register writes (legacy)
 //!
-#define  EDIS   asm(" EDIS")
+#define  EDIS    do {__edis();} while(0)
 
 //! \brief Define to disable protected register writes
 //!
-#define  DISABLE_PROTECTED_REGISTER_WRITE_MODE asm(" EDIS")
+#define  DISABLE_PROTECTED_REGISTER_WRITE_MODE do {__edis();} while(0)
 
 //! \brief Define for emulation stop 0
 //!

@@ -626,7 +626,7 @@ ADC_getSocSampleWindow(ADC_Handle adcHandle, const ADC_SocNumber_e socNumber)
 //! \param[in] sensorSample Temperature sensor sample
 //! \return    Temperature in degrees Celcius
 inline int16_t
-ADC_getTemperatureC(ADC_Handle adcHandle, int16_t sensorSample)
+ADC_getTemperatureC(ADC_Handle adcHandle __attribute__((unused)), int16_t sensorSample)
 {
     return ((sensorSample - ADC_getTempOffset())*(int32_t)ADC_getTempSlope() +
             ADC_FP_ROUND + ADC_KELVIN_OFF)/ADC_FP_SCALE - ADC_KELVIN;
@@ -637,7 +637,7 @@ ADC_getTemperatureC(ADC_Handle adcHandle, int16_t sensorSample)
 //! \param[in] sensorSample Temperature sensor sample
 //! \return    Temperature in degrees Kelvin
 inline int16_t
-ADC_getTemperatureK(ADC_Handle adcHandle, int16_t sensorSample)
+ADC_getTemperatureK(ADC_Handle adcHandle __attribute__((unused)), int16_t sensorSample)
 {
     return ((sensorSample - ADC_getTempOffset())*(int32_t)ADC_getTempSlope() +
             ADC_FP_ROUND + ADC_KELVIN_OFF)/ADC_FP_SCALE;

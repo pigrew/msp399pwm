@@ -40,8 +40,8 @@ static uint16_t mepsBase;
 static uint16_t mepsFrac;
 
 static void pwm_applyRatio(uint16_t period);
-__interrupt void epwm1_ISR(void);
-__interrupt void epwm2_ISR(void);
+static __interrupt void epwm1_ISR(void);
+static __interrupt void epwm2_ISR(void);
 
 void pwm_init() {
     uint32_t ch;
@@ -250,7 +250,7 @@ void pwm_applyMEP(uint16_t x) {
 
 static uint16_t dacout2;
 
-__interrupt void epwm1_ISR(void) {
+static __interrupt void epwm1_ISR(void) {
     static uint16_t toggle = 0;
     // Calculate first CMPA
     static uint32_t pwmA_fraction_sigma = (1ul<<(DS_N+2-1));    // only touched by ISR, so no need for volatile.
@@ -292,7 +292,7 @@ __interrupt void epwm1_ISR(void) {
     return;
 }
 
-__interrupt void epwm2_ISR(void) {
+static __interrupt void epwm2_ISR(void) {
     EPWMA_B_REGS.CMPA.half.CMPAHR = dacout2 << 8;
 
     EPWMA_B_REGS.ETCLR.bit.INT = 1;

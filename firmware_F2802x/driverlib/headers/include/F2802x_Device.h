@@ -89,8 +89,8 @@ extern cregister volatile unsigned int IER;
 #define  DINT   asm(" setc INTM")
 #define  ERTM   asm(" clrc DBGM")
 #define  DRTM   asm(" setc DBGM")
-#define  EALLOW asm(" EALLOW")
-#define  EDIS   asm(" EDIS")
+#define  EALLOW do {__eallow();} while(0)
+#define  EDIS   do {__edis();} while(0)
 #define  ESTOP0 asm(" ESTOP0")
 
 #define M_INT1  0x0001
