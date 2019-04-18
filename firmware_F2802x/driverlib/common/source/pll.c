@@ -49,6 +49,7 @@
 //
 #include "DSP28x_Project.h"
 #include "pll.h"
+#include "../../../asmfuncs.h"
 
 //
 // PLL_disable -
@@ -376,7 +377,7 @@ PLL_setup(PLL_Handle pllHandle, const PLL_Multiplier_e clkMult,
         //
         // The clock is missing so we cannot setup the PLL correctly
         //
-        asm(" ESTOP0");
+        asm_estop0();
     }
     
     //

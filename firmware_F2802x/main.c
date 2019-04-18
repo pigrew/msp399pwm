@@ -43,6 +43,7 @@
 #include "pwm.h"
 #include "systick.h"
 #include "cmd.h"
+#include "asmfuncs.h"
 
 #include "common/include/clk.h"
 #include "common/include/flash.h"
@@ -163,7 +164,7 @@ void main(void)
             lastTick = systick_get();
         }
         processCmds();
-        IDLE; // Wake at either interrupt (100 Hz systick, UART, or timer)
+        asm_idle(); // Wake at either interrupt (100 Hz systick, UART, or timer)
     }
 }
 
@@ -198,7 +199,7 @@ static void SetupXtal(PLL_Handle myPll) {
 void
 error (void)
 {
-    ESTOP0;     // Stop here and handle error
+    asm_estop0();     // Stop here and handle error
 }
 
 //

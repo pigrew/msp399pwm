@@ -1,4 +1,4 @@
-
+#ifdef 0
 #include "F2802x_Device.h"     // F2802x Headerfile Include File
 #include "cpu.h"
 #include "sfo_v6.h"
@@ -134,3 +134,4 @@ int SFO() {
 	}
 	return retVal;
 }
+#endif

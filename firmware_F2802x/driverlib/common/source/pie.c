@@ -50,7 +50,7 @@
 #include "DSP28x_Project.h"
 #include "pie.h"
 #include "pie_init.h"
-
+#include "../../../asmfuncs.h"
 //
 // PIE_clearAllFlags -
 //
@@ -388,7 +388,7 @@ PIE_illegalIsr(void)
     //
     // The next two lines are placeholders
     //
-    asm(" ESTOP0");
+    asm_estop0();
 
     //
     // endless hold loop
