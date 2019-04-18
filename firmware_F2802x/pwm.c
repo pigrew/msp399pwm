@@ -18,6 +18,9 @@
 
 #define DELTA_SIGMA
 
+#define EPWMA_A_REGS (EPwm1Regs)
+#define EPWMA_B_REGS (EPwm2Regs)
+
 #define PIEACK_GROUP_EPWM (PIEACK_GROUP3)
 
 uint16_t MEP_ScaleFactor=0;
@@ -54,11 +57,11 @@ void pwm_init() {
 #ifdef DELTA_SIGMA
     // Proper ordering from the reference manual for enabling interrupts
     // 1. Disable global interrupts (CPU INTM flag)
-    DISABLE_INTERRUPTS;
+    uint16_t intr_state = __disable_interrupts();
 
     // 2. Disable ePWM interrupts
-    EPwm1Regs.ETSEL.bit.INTEN = 0;
-    EPwm2Regs.ETSEL.bit.INTEN = 0;
+    EPWMA_A_REGS.ETSEL.bit.INTEN = 0;
+    EPWMA_B_REGS.ETSEL.bit.INTEN = 0;
 
     // 3. Set TBCLKSYNC=0
     ENABLE_PROTECTED_REGISTER_WRITE_MODE;
@@ -87,9 +90,9 @@ void pwm_init() {
         volatile struct EPWM_REGS *pwmRegs;
 
         if(ch==0) {
-            pwmRegs = &EPwm1Regs;
+            pwmRegs = &EPWMA_A_REGS;
         } else {
-            pwmRegs = &EPwm2Regs;
+            pwmRegs = &EPWMA_B_REGS;
         }
         pwmRegs->TBPRD = g_period-1;
 
@@ -138,8 +141,8 @@ void pwm_init() {
 #ifdef DELTA_SIGMA
     // 5. Set TBCLKSYNC=1
     // 6. Clear any spurious ePWM flags (including PIEIFR)
-    EPwm1Regs.ETCLR.bit.INT = 1;
-    EPwm2Regs.ETCLR.bit.INT = 1;
+    EPWMA_A_REGS.ETCLR.bit.INT = 1;
+    EPWMA_B_REGS.ETCLR.bit.INT = 1;
     //PieCtrlRegs.PIEIFR3.bit.
 
     // 7. Enable ePWM interrupts
@@ -149,36 +152,62 @@ void pwm_init() {
     DISABLE_PROTECTED_REGISTER_WRITE_MODE;
 
     PieCtrlRegs.PIEIER3.all |= PIE_InterruptSource_EPWM1 | PIE_InterruptSource_EPWM2;
-    IER |= M_INT3; // Enable group 3 interrupt
 
-    EPwm1Regs.ETSEL.bit.INTEN = 1;
-    EPwm2Regs.ETSEL.bit.INTEN = 1;
+    EPWMA_A_REGS.ETSEL.bit.INTEN = 1;
+    EPWMA_B_REGS.ETSEL.bit.INTEN = 1;
 
     // 8. Enable global interrupts
-    ENABLE_INTERRUPTS;
+    __restore_interrupts(intr_state);
+    IER |= M_INT3; // Enable group 3 interrupt (must be after restoring interrupts since that would just clear it)
 #endif
 
     pwm_applyRatio(g_period);
 
-    EALLOW;
+    ENABLE_PROTECTED_REGISTER_WRITE_MODE;
     SysCtrlRegs.PCLKCR0.bit.TBCLKSYNC = 1;       // Start all the timers synced
-    EDIS;
+    DISABLE_PROTECTED_REGISTER_WRITE_MODE;
 
-    EPwm1Regs.TBCTL.all  |= PWM_TBCTL_SWFSYNC_BITS; // Force synchronization of counters
+    EPWMA_A_REGS.TBCTL.all  |= PWM_TBCTL_SWFSYNC_BITS; // Force synchronization of counters
 }
 
 void pwm_tick() {
     if((systick_get() & 0x0003)== 0) {
         int sfoStatus = SFO();
-
-        if(sfoStatus == SFO_ERROR)
+        switch(sfoStatus) {
+        case SFO_COMPLETE:
+            pwm_applyRatio(g_period); // apply new MEP value
+            break;
+        case SFO_ERROR:
             error();
+            break;
+        }
     }
 }
 void pwm_setRatio(uint32_t ratio) {
 
     g_ratio = ratio;
     pwm_applyRatio(g_period);
+}
+
+void pwm_setPeriod(uint16_t period) {
+    if(period < 16)
+        period = 16; // minimum for PWM generator
+
+    // CCR1 may not immediately load, so try to load it manually?
+    // Recalculate and reapply ratio
+    if(period < g_period) { // reducing period
+        pwm_applyRatio(period);
+        EPWMA_A_REGS.TBPRD = g_period-1;
+        EPWMA_B_REGS.TBPRD = g_period-1;
+    } else {
+        EPWMA_A_REGS.TBPRD = g_period-1;
+        EPWMA_B_REGS.TBPRD = g_period-1;
+        pwm_applyRatio(period);
+    }
+    // And resynchronize the second channel.
+    EPWMA_B_REGS.TBPHS.half.TBPHS = g_period>>1;       // Phase offset of 180 degrees
+    EPWMA_A_REGS.TBCTL.all  |= PWM_TBCTL_SWFSYNC_BITS;    // Force synchronization of counters
+    g_period = period;
 }
 // Manual says MEP is number per clock cycle;
 #define MAX_32_D ((double)4294967295.0)
@@ -189,51 +218,84 @@ static void pwm_applyRatio(uint16_t period) {
     meps_HR =  meps_HR - ((((uint64_t)high)*((uint64_t)MEP_ScaleFactor_16))<<32);
     uint16_t meps = meps_HR >> 32; // MEPS count is the high 8 bits;
     //meps = meps + 0x0040; // Rounding
+
+    // Disable so we don't get weird interactions with the interrupt handler
+    uint16_t intr_state = __disable_interrupts();
     mepsBase = meps >> 8;
     mepsFrac = meps & 0xFF;
     uint16_t meps1 = meps>>8;
     uint16_t meps2 = meps>>8;
-    EPwm1Regs.CMPA.all = (((uint32_t)high)<<16) + (meps1 << 8);
-    EPwm2Regs.CMPA.all = (((uint32_t)high)<<16) + (meps2 << 8);
-
+    EPWMA_A_REGS.CMPA.all = (((uint32_t)high)<<16) + (meps1 << 8);
+    EPWMA_B_REGS.CMPA.all = (((uint32_t)high)<<16) + (meps2 << 8);
+    __restore_interrupts(intr_state);
 }
 
 void pwm_applyWhole(uint16_t x) {
-    EPwm1Regs.CMPA.half.CMPA = x;
-    EPwm2Regs.CMPA.half.CMPA = x;
+    EPWMA_A_REGS.CMPA.half.CMPA = x;
+    EPWMA_B_REGS.CMPA.half.CMPA = x;
 }
 void pwm_applyMEP(uint16_t x) {
     uint16_t a = x>>1;
-    EPwm1Regs.CMPA.half.CMPAHR = a<<8;
-    EPwm2Regs.CMPA.half.CMPAHR = (x-a)<<8;
+    EPWMA_A_REGS.CMPA.half.CMPAHR = a<<8;
+    EPWMA_B_REGS.CMPA.half.CMPAHR = (x-a)<<8;
 }
-
-
 //
 // sciaRxFifoIsr -
 //
 #ifdef DELTA_SIGMA
-__interrupt void epwm1_ISR(void) {
-    //
-    // Clear INT flag for this timer
-    //
-    EPwm1Regs.ETCLR.bit.INT = 1;
+// See http://www.ti.com/lit/an/slyt076/slyt076.pdf for details
+// DAC_IN is mepsFrac, a 16-bit value
 
-    //
-    // Acknowledge this interrupt to receive more interrupts from group 3
-    //
+#define DS_N (16)
+
+static uint16_t dacout2;
+
+__interrupt void epwm1_ISR(void) {
+    static uint16_t toggle = 0;
+    // Calculate first CMPA
+    static uint32_t pwmA_fraction_sigma = (1ul<<(DS_N+2-1));    // only touched by ISR, so no need for volatile.
+    uint32_t delta = 0ul;
+    if (pwmA_fraction_sigma & (1ul << (DS_N+2-1 ))) // if bit 16+2
+        delta = (3ul << DS_N);
+    uint32_t delta_out = ((uint32_t)mepsFrac) + delta;
+    uint32_t sigma_out = delta_out + pwmA_fraction_sigma;
+    pwmA_fraction_sigma = sigma_out;
+    uint16_t x = 0;
+    if(pwmA_fraction_sigma & (1ul << (DS_N+2-1 ))) // if highest bit set?
+        x=1;
+    if(toggle)
+        EPWMA_A_REGS.CMPA.half.CMPAHR = (mepsBase + x)<<8;
+    else
+        dacout2 = mepsBase + x;
+
+    // calculate second CMPA
+    delta = 0ul;
+    if (x) // if bit 16+2
+        delta = (3ul << DS_N);
+    delta_out = ((uint32_t)mepsFrac) + delta;
+    sigma_out = delta_out + pwmA_fraction_sigma;
+    sigma_out = delta_out + pwmA_fraction_sigma;
+    x = 0;
+    if(pwmA_fraction_sigma & (1ul << (DS_N+2-1 ))) // if highest bit set?
+        x=1;
+
+    if(toggle)
+        dacout2 = mepsBase + x;
+    else
+        EPWMA_A_REGS.CMPA.half.CMPAHR = (mepsBase + x)<<8;
+
+    toggle = !toggle;
+
+    // Ack the interrupt
+    EPWMA_A_REGS.ETCLR.bit.INT = 1;
     PieCtrlRegs.PIEACK.all = PIEACK_GROUP_EPWM;
     return;
 }
-__interrupt void epwm2_ISR(void) {
-    //
-    // Clear INT flag for this timer
-    //
-    EPwm2Regs.ETCLR.bit.INT = 1;
 
-    //
-    // Acknowledge this interrupt to receive more interrupts from group 3
-    //
+__interrupt void epwm2_ISR(void) {
+    EPWMA_B_REGS.CMPA.half.CMPAHR = dacout2 << 8;
+
+    EPWMA_B_REGS.ETCLR.bit.INT = 1;
     PieCtrlRegs.PIEACK.all = PIEACK_GROUP_EPWM;
     return;
 }
