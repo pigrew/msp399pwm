@@ -14,6 +14,7 @@
 
 void pwm_init(CLK_Handle myClk, GPIO_Handle myGpio);
 void pwm_tick();
+void pwm_setPeriod(uint16_t period);
 void pwm_setRatio(uint32_t ratio);
 void pwm_applyWhole(uint16_t x);
 void pwm_applyMEP(uint16_t x);

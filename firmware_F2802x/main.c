@@ -1,53 +1,4 @@
 //#############################################################################
-//
-//  File:   Example_2802xHRPWM.c
-//
-//  Title:  F2802x Device HRPWM example
-//
-//! \addtogroup example_list
-//!  <h1>High Resolution PWM</h1>
-//!
-//!  This example modifies the MEP control registers to show edge displacement
-//!  due to the HRPWM control extension of the respective EPwm module
-//!  All EPwm1A,2A,3A,4A channels (GPIO0, GPIO2, GPIO4, GPIO6) will have fine 
-//!  edge movement due to HRPWM logic
-//!
-//!  -# PWM Freq = SYSCLK/(period=10),
-//!         ePWM1A toggle low/high with MEP control on rising edge
-//!         PWM Freq = SYSCLK/(period=10),
-//!         ePWM1B toggle low/high with NO HRPWM control
-//!
-//!  -# PWM Freq = SYSCLK/(period=20),
-//!         ePWM2A toggle low/high with MEP control on rising edge
-//!         PWM Freq = SYSCLK/(period=20),
-//!         ePWM2B toggle low/high with NO HRPWM control
-//!
-//!  -# PWM Freq = SYSCLK/(period=10),
-//!         ePWM3A toggle as high/low with MEP control on falling edge
-//!         PWM Freq = SYSCLK/(period=10),
-//!         ePWM3B toggle low/high with NO HRPWM control
-//!
-//!  -# PWM Freq = SYSCLK/(period=20),
-//!         ePWM4A toggle as high/low with MEP control on falling edge
-//!         PWM Freq = SYSCLK/(period=20),
-//!         ePWM4B toggle low/high with NO HRPWM control
-//!
-//!  Monitor ePWM1-ePWM4 pins on an oscilloscope.
-//!
-//!    - ePWM1A is on GPIO0
-//!    - ePWM1B is on GPIO1
-//!
-//!    - ePWM2A is on GPIO2
-//!    - ePWM2B is on GPIO3
-//!
-//!    - ePWM3A is on GPIO4
-//!    - ePWM3B is on GPIO5
-//!
-//!    - ePWM4A is on GPIO6
-//!    - ePWM4B is on GPIO7
-//
-//
-//#############################################################################
 // $TI Release: F2802x Support Library v3.02.00.00 $
 // $Release Date: Thu Oct 18 15:45:37 CDT 2018 $
 // $Copyright:
@@ -184,6 +135,7 @@ void main(void)
     update =1;
     DutyFine =0;
 
+    CLK_enableGpioInputClock(myClk);
     //
     // ePWM and HRPWM register initialization
     //
@@ -195,31 +147,22 @@ void main(void)
     CPU_enableInt(myCpu,  CPU_IntNumber_9); // SCI interrupts
     CPU_enableGlobalInts(myCpu);
 
+    // Debug pin
     ENABLE_PROTECTED_REGISTER_WRITE_MODE;
     GpioCtrlRegs.GPAMUX1.bit.GPIO1 = GPIO_1_Mode_GeneralPurpose;
     GpioCtrlRegs.GPADIR.bit.GPIO1 = 1; // SET as OUTPUT
+    GpioCtrlRegs.GPAMUX1.bit.GPIO3 = GPIO_3_Mode_GeneralPurpose;
+    GpioCtrlRegs.GPADIR.bit.GPIO3 = 1; // SET as OUTPUT
     DISABLE_PROTECTED_REGISTER_WRITE_MODE;
 
     uart_write("C399PWM\n", 8);
     while (update ==1)
     {
         if(lastTick != systick_get()) {
-            //char buffer[10];
-            if((systick_get() & 0x007F)== 0) {
-                GpioDataRegs.GPASET.bit.GPIO1 = 1;
-                pwm_tick();
-                GpioDataRegs.GPACLEAR.bit.GPIO1 = 1;
-                lastTick = systick_get();
-            }
-            processCmds();
-          /*  if(sfoStatus == SFO_COMPLETE) {
-                / *uart_write((uint16_t*)"SFO ", 4);
-                u16hex(MEP_ScaleFactor, buffer, 8);
-                uart_write((uint16_t*)buffer,2);
-                uart_write((uint16_t*)"\n",1);
-                GPIO_toggle(myGpio, GPIO_Number_1);*/
-           // }*/
+            pwm_tick();
+            lastTick = systick_get();
         }
+        processCmds();
         IDLE; // Wake at either interrupt (100 Hz systick, UART, or timer)
     }
 }

@@ -131,6 +131,7 @@ int SFO() {
         HR_Result24a = 0;
         HR_Result24b = 0;
         avg_i = AVGCOUNT;
+        GpioDataRegs.GPATOGGLE.bit.GPIO3 = 1;
 	    break;
 	}
 	return retVal;
