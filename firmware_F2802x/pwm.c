@@ -25,7 +25,7 @@ uint16_t MEP_ScaleFactor_16;
 #pragma DATA_ALIGN(MEP_ScaleFactor_16,2); // Align for MAC usage
 
 
-static uint16_t g_period   = 0xFFFE;
+static uint16_t g_period   = 0xFFFF;
 //static uint32_t g_duration = 0xB5FCDD00;
 static uint32_t g_ratio = 0xB5FCDD7F;
 #pragma DATA_ALIGN(g_period,2); // Align for MAC usage
@@ -91,7 +91,7 @@ void pwm_init() {
         } else {
             pwmRegs = &EPwm2Regs;
         }
-        pwmRegs->TBPRD = g_period;
+        pwmRegs->TBPRD = g_period-1;
 
         // Default CMPA to 50% duty cycle
         pwmRegs->CMPA.half.CMPA = g_period>>1;
@@ -143,6 +143,7 @@ void pwm_init() {
     //PieCtrlRegs.PIEIFR3.bit.
 
     // 7. Enable ePWM interrupts
+    ENABLE_PROTECTED_REGISTER_WRITE_MODE;
     PieVectTable.EPWM1_INT = &epwm1_ISR;
     PieVectTable.EPWM2_INT = &epwm2_ISR;
     DISABLE_PROTECTED_REGISTER_WRITE_MODE;
