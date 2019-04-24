@@ -18,8 +18,12 @@
 
 #define DELTA_SIGMA
 
-#define EPWMA_A_REGS (EPwm1Regs)
-#define EPWMA_B_REGS (EPwm2Regs)
+#define EPWMA_A_REGS (EPwm3Regs)
+#define EPWMA_B_REGS (EPwm4Regs)
+
+#define PIE_VECT_INT_A (PieVectTable.EPWM3_INT)
+#define PIE_VECT_INT_B (PieVectTable.EPWM4_INT)
+#define EPWMA_PIE_FLAGS (PIE_InterruptSource_EPWM3 | PIE_InterruptSource_EPWM4)
 
 #define PIEACK_GROUP_EPWM (PIEACK_GROUP3)
 
@@ -40,24 +44,26 @@ static uint16_t mepsBase;
 static uint16_t mepsFrac;
 
 static void pwm_applyRatio(uint16_t period);
-static __interrupt void epwm1_ISR(void);
-static __interrupt void epwm2_ISR(void);
+static __interrupt void epwmA_ISR(void);
+static __interrupt void epwmB_ISR(void);
 
 void pwm_init() {
     uint32_t ch;
     int sfoStatus;
+    uint16_t intr_state;
 
     ENABLE_PROTECTED_REGISTER_WRITE_MODE;
-    GpioCtrlRegs.GPAPUD.bit.GPIO0 = GPIO_PullUp_Disable;
-    GpioCtrlRegs.GPAPUD.bit.GPIO2 = GPIO_PullUp_Disable;
-    GpioCtrlRegs.GPAMUX1.bit.GPIO0 = GPIO_0_Mode_EPWM1A;
-    GpioCtrlRegs.GPAMUX1.bit.GPIO2 = GPIO_2_Mode_EPWM2A;
+    GpioCtrlRegs.GPAPUD.bit.GPIO4 = GPIO_PullUp_Disable;
+    GpioCtrlRegs.GPAMUX1.bit.GPIO4 = GPIO_4_Mode_EPWM3A;
+
+    GpioCtrlRegs.GPAPUD.bit.GPIO6 = GPIO_PullUp_Disable;
+    GpioCtrlRegs.GPAMUX1.bit.GPIO6 = GPIO_6_Mode_EPWM4A;
     DISABLE_PROTECTED_REGISTER_WRITE_MODE;
 
 #ifdef DELTA_SIGMA
     // Proper ordering from the reference manual for enabling interrupts
     // 1. Disable global interrupts (CPU INTM flag)
-    uint16_t intr_state = __disable_interrupts();
+    intr_state = __disable_interrupts();
 
     // 2. Disable ePWM interrupts
     EPWMA_A_REGS.ETSEL.bit.INTEN = 0;
@@ -69,8 +75,8 @@ void pwm_init() {
 
 #endif
 
-    CLK_enablePwmClock(myClk, PWM_Number_1);
-    CLK_enablePwmClock(myClk, PWM_Number_2);
+    CLK_enablePwmClock(myClk, PWM_Number_3);
+    CLK_enablePwmClock(myClk, PWM_Number_4);
     CLK_enableHrPwmClock(myClk);
 
     /*
@@ -147,11 +153,11 @@ void pwm_init() {
 
     // 7. Enable ePWM interrupts
     ENABLE_PROTECTED_REGISTER_WRITE_MODE;
-    PieVectTable.EPWM1_INT = &epwm1_ISR;
-    PieVectTable.EPWM2_INT = &epwm2_ISR;
+    PIE_VECT_INT_A = &epwmA_ISR;
+    PIE_VECT_INT_B = &epwmB_ISR;
     DISABLE_PROTECTED_REGISTER_WRITE_MODE;
 
-    PieCtrlRegs.PIEIER3.all |= PIE_InterruptSource_EPWM1 | PIE_InterruptSource_EPWM2;
+    PieCtrlRegs.PIEIER3.all |= EPWMA_PIE_FLAGS;
 
     EPWMA_A_REGS.ETSEL.bit.INTEN = 1;
     EPWMA_B_REGS.ETSEL.bit.INTEN = 1;
@@ -213,18 +219,20 @@ void pwm_setPeriod(uint16_t period) {
 #define MAX_32_D ((double)4294967295.0)
 
 static void pwm_applyRatio(uint16_t period) {
+    uint16_t intr_state;
+    uint16_t meps, meps1, meps2;
     uint16_t high =   (((uint64_t)g_ratio)*((uint64_t)period))>>32;
     uint64_t meps_HR = ((uint64_t)g_ratio)*((uint64_t)period)*((uint64_t)MEP_ScaleFactor_16);
     meps_HR =  meps_HR - ((((uint64_t)high)*((uint64_t)MEP_ScaleFactor_16))<<32);
-    uint16_t meps = meps_HR >> 32; // MEPS count is the high 8 bits;
+    meps = meps_HR >> 32; // MEPS count is the high 8 bits;
     //meps = meps + 0x0040; // Rounding
 
     // Disable so we don't get weird interactions with the interrupt handler
-    uint16_t intr_state = __disable_interrupts();
+    intr_state = __disable_interrupts();
     mepsBase = meps >> 8;
     mepsFrac = meps & 0xFF;
-    uint16_t meps1 = meps>>8;
-    uint16_t meps2 = meps>>8;
+    meps1 = meps>>8;
+    meps2 = meps>>8;
     EPWMA_A_REGS.CMPA.all = (((uint32_t)high)<<16) + (meps1 << 8);
     EPWMA_B_REGS.CMPA.all = (((uint32_t)high)<<16) + (meps2 << 8);
     __restore_interrupts(intr_state);
@@ -250,17 +258,19 @@ void pwm_applyMEP(uint16_t x) {
 
 static uint16_t dacout2;
 
-static __interrupt void epwm1_ISR(void) {
+static __interrupt void epwmA_ISR(void) {
     static uint16_t toggle = 0;
+    uint16_t x;
+    uint32_t sigma_out, delta_out;
     // Calculate first CMPA
     static uint32_t pwmA_fraction_sigma = (1ul<<(DS_N+2-1));    // only touched by ISR, so no need for volatile.
     uint32_t delta = 0ul;
     if (pwmA_fraction_sigma & (1ul << (DS_N+2-1 ))) // if bit 16+2
         delta = (3ul << DS_N);
-    uint32_t delta_out = ((uint32_t)mepsFrac) + delta;
-    uint32_t sigma_out = delta_out + pwmA_fraction_sigma;
+    delta_out = ((uint32_t)mepsFrac) + delta;
+    sigma_out = delta_out + pwmA_fraction_sigma;
     pwmA_fraction_sigma = sigma_out;
-    uint16_t x = 0;
+    x = 0;
     if(pwmA_fraction_sigma & (1ul << (DS_N+2-1 ))) // if highest bit set?
         x=1;
     if(toggle)
@@ -292,7 +302,7 @@ static __interrupt void epwm1_ISR(void) {
     return;
 }
 
-static __interrupt void epwm2_ISR(void) {
+static __interrupt void epwmB_ISR(void) {
     EPWMA_B_REGS.CMPA.half.CMPAHR = dacout2 << 8;
 
     EPWMA_B_REGS.ETCLR.bit.INT = 1;

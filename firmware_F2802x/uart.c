@@ -50,11 +50,23 @@ void uart_init() {
     tx_rb.n_bits = TXBUF_BITS;
 
     ENABLE_PROTECTED_REGISTER_WRITE_MODE;
+#ifdef LAUNCHPAD
+    // RX
     GpioCtrlRegs.GPAQSEL2.bit.GPIO28 = GPIO_Qual_ASync;
     GpioCtrlRegs.GPAPUD.bit.GPIO28 = GPIO_PullUp_Enable;
-    GpioCtrlRegs.GPAPUD.bit.GPIO29 = GPIO_PullUp_Disable;
     GpioCtrlRegs.GPAMUX2.bit.GPIO28 = GPIO_28_Mode_SCIRXDA;
+    // TX
+    GpioCtrlRegs.GPAPUD.bit.GPIO29 = GPIO_PullUp_Disable;
     GpioCtrlRegs.GPAMUX2.bit.GPIO29 = GPIO_29_Mode_SCITXDA;
+#else
+    // RX
+    GpioCtrlRegs.GPAQSEL2.bit.GPIO19 = GPIO_Qual_ASync;
+    GpioCtrlRegs.GPAPUD.bit.GPIO19 = GPIO_PullUp_Enable;
+    GpioCtrlRegs.GPAMUX2.bit.GPIO19 = GPIO_19_Mode_SCIRXDA;
+    // TX
+    GpioCtrlRegs.GPAPUD.bit.GPIO18 = GPIO_PullUp_Disable;
+    GpioCtrlRegs.GPAMUX2.bit.GPIO18 = GPIO_18_Mode_SCITXDA;
+#endif
     DISABLE_PROTECTED_REGISTER_WRITE_MODE;
 
     mySci = SCI_init((void *)SCIA_BASE_ADDR, sizeof(SCI_Obj));

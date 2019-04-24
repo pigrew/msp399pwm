@@ -192,7 +192,7 @@ static void SetupXtal(PLL_Handle myPll) {
 
     // Setup the PLL for x12 /2 which will yield 60Mhz = 10Mhz * 12 / 2
     //
-    PLL_setup(myPll, PLL_Multiplier_10, PLL_DivideSelect_ClkIn_by_2);
+    PLL_setup(myPll, PLL_Multiplier_12, PLL_DivideSelect_ClkIn_by_4);
 
 }
 

@@ -204,7 +204,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="sfo_rewrite_v6c.c|sfo_rewrite.c|sfo_v6.asm|F2802x_generic_ram.cmd" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="sfo_rewrite.c|sfo_v6.asm|F2802x_generic_ram.cmd" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
