@@ -1,0 +1,7 @@
+*.log
+syntmp
+synwork
+synlog
+
+.build_status
+impl*/

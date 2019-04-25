@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BaliProject version="3.2" title="PicoPWM" device="LCMXO2-1200ZE-2MG132C" default_implementation="impl_lse">
+    <Options/>
+    <Implementation title="impl1" dir="impl1" description="impl1" synthesis="synplify" default_strategy="Strategy1">
+        <Options def_top="pwmOC" top="top"/>
+        <Source name="pllImpl.ipx" type="IPX_Module" type_short="IPX">
+            <Options/>
+        </Source>
+        <Source name="testsch.sch" type="Schematic" type_short="Schematic">
+            <Options/>
+        </Source>
+        <Source name="PwmOC.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="pwm.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="top.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="impl1/impl1.xcf" type="Programming Project File" type_short="Programming">
+            <Options/>
+        </Source>
+        <Source name="pciopwm.fdc" type="Synplify Design Constraints File" type_short="SDC">
+            <Options/>
+        </Source>
+        <Source name="PicoPWM.lpf" type="Logic Preference" type_short="LPF">
+            <Options/>
+        </Source>
+    </Implementation>
+    <Implementation title="impl_lse" dir="impl_lse" description="impl_lse" synthesis="lse" default_strategy="Strategy1">
+        <Options def_top="top"/>
+        <Source name="pllImpl.ipx" type="IPX_Module" type_short="IPX">
+            <Options/>
+        </Source>
+        <Source name="testsch.sch" type="Schematic" type_short="Schematic">
+            <Options/>
+        </Source>
+        <Source name="PwmOC.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="pwm.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="top.v" type="Verilog" type_short="Verilog">
+            <Options top_module="top"/>
+        </Source>
+        <Source name="impl1/impl1.xcf" type="Programming Project File" type_short="Programming">
+            <Options/>
+        </Source>
+        <Source name="PicoPWM.lpf" type="Logic Preference" type_short="LPF">
+            <Options/>
+        </Source>
+    </Implementation>
+    <Strategy name="Strategy1" file="PicoPWM1.sty"/>
+</BaliProject>
