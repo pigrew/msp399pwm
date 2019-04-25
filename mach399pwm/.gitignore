@@ -2,6 +2,9 @@
 syntmp
 synwork
 synlog
-
 .build_status
 impl*/
+.recovery
+*_tcr.dir
+reportview.xml
+promote.xml

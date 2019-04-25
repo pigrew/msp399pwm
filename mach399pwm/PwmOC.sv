@@ -16,7 +16,7 @@ input wire [WIDTH-1:0] cmpH
 reg [WIDTH:0] cmpL, cmpL_next;*/
 
 reg pwmI_next, pwmQ_next;
-always @(posedge clk, posedge rst) begin
+always_ff @(posedge clk, posedge rst) begin
 	if(rst) begin
 		//cmpH <= '0;
 		//cmpL <= 'h7;
@@ -28,7 +28,7 @@ always @(posedge clk, posedge rst) begin
 	end
 end
 
-always @(*) begin
+always_comb begin
 	pwmI_next = pwmI & pwmQ;
 	pwmQ_next = pwmI & pwmQ;
 	//cmpH_next = cmpH;
