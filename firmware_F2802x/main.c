@@ -154,6 +154,17 @@ void main(void)
     GpioCtrlRegs.GPADIR.bit.GPIO1 = 1; // SET as OUTPUT
     GpioCtrlRegs.GPAMUX1.bit.GPIO3 = GPIO_3_Mode_GeneralPurpose;
     GpioCtrlRegs.GPADIR.bit.GPIO3 = 1; // SET as OUTPUT
+
+    SysCtrlRegs.XCLK.bit.XCLKOUTDIV = 3; // Disable SYSCLKOUT
+    //GpioCtrlRegs.GPAMUX2.bit.GPIO18 = GPIO_18_Mode_XCLKOUT;
+    //GpioCtrlRegs.GPADIR.bit.GPIO18 = 1; // SET as OUTPUT
+
+    // Usused pins as input (pull-up): GPIO 0,1,2,3,5,7,12,16,17
+    // But, >=12 default to this, anyway.
+    GpioCtrlRegs.GPAPUD.all &= ~((1<<0) | (1<<1) | (1<<2) | (1<<3) | (1<<5) | (1<<7));
+    // JTAG pins 35,36,37,38 also get pull-ups (for when JTAG is disabled)
+    // But, this is also default.
+
     DISABLE_PROTECTED_REGISTER_WRITE_MODE;
 
     uart_write("C399PWM\n", 8);
@@ -163,7 +174,9 @@ void main(void)
             pwm_tick();
             lastTick = systick_get();
         }
-        processCmds();
+        if(cmd_available())
+            processCmds();
+
         asm_idle(); // Wake at either interrupt (100 Hz systick, UART, or timer)
     }
 }

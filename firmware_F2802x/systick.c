@@ -33,11 +33,11 @@ void systick_init() {
     IER |= M_INT14; // Timer 2 => Int14
     StartCpuTimer2();
 }
-
+#pragma CODE_SECTION(systick_get, "ramfuncs")
 uint16_t systick_get() {
     return systick;
 }
-
+#pragma CODE_SECTION(cpu_timer2_isr, "ramfuncs")
 static __interrupt void cpu_timer2_isr(void)
 {
     CpuTimer2Regs.TCR.bit.TIF = 1; // Ack the timer?

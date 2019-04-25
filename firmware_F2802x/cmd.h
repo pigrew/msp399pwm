@@ -9,6 +9,6 @@
 #define CMD_H_
 
 void processCmds();
-
+uint16_t cmd_available();
 
 #endif /* CMD_H_ */

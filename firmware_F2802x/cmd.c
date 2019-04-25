@@ -26,6 +26,11 @@ static void write_temps(void) {
     uart_write("\n",1);
 }*/
 static uint32_t atoul(char *str);
+
+#pragma CODE_SECTION(cmd_available, "ramfuncs")
+uint16_t cmd_available() {
+    return cmdComplete;
+}
 void processCmds() {
     char str[8];
     uint32_t d32;

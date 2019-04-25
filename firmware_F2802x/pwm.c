@@ -257,7 +257,7 @@ void pwm_applyMEP(uint16_t x) {
 #define DS_N (16)
 
 static uint16_t dacout2;
-
+#pragma CODE_SECTION(epwmA_ISR, "ramfuncs")
 static __interrupt void epwmA_ISR(void) {
     static uint16_t toggle = 0;
     uint16_t x;
@@ -301,7 +301,7 @@ static __interrupt void epwmA_ISR(void) {
     PieCtrlRegs.PIEACK.all = PIEACK_GROUP_EPWM;
     return;
 }
-
+#pragma CODE_SECTION(epwmA_ISR, "ramfuncs")
 static __interrupt void epwmB_ISR(void) {
     EPWMA_B_REGS.CMPA.half.CMPAHR = dacout2 << 8;
 
