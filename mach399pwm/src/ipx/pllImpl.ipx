@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<DiamondModule name="pllImpl" module="PLL" VendorName="Lattice Semiconductor Corporation" generator="IPexpress" date="2019 04 26 22:12:16.532" version="5.8" type="Module" synthesis="synplify" source_format="Verilog">
+<DiamondModule name="pllImpl" module="pllImpl" VendorName="Lattice Semiconductor Corporation" generator="IPexpress" date="2019 04 27 18:46:16.457" version="5.8" type="Module" synthesis="synplify" source_format="Verilog HDL">
   <Package>
-		<File name="pllImpl.lpc" type="lpc" modified="2019 04 26 22:12:15.124"/>
-		<File name="pllImpl.v" type="top_level_verilog" modified="2019 04 26 22:12:15.202"/>
-		<File name="pllImpl_tmpl.v" type="template_verilog" modified="2019 04 26 22:12:15.207"/>
+		<File name="pllImpl.lpc" type="lpc" modified="2019 04 27 18:46:08.327"/>
+		<File name="pllImpl.v" type="top_level_verilog" modified="2019 04 27 18:46:08.407"/>
+		<File name="pllImpl_tmpl.v" type="template_verilog" modified="2019 04 27 18:46:08.417"/>
   </Package>
 </DiamondModule>

@@ -10,7 +10,7 @@ wire spi_sclk, spi_csn, spi_mosi, spi_miso;
 wire scl, sda;
 wire I2CAlert;
 wire pwm0, pwm1;
-
+wire clk_out;
 always begin
 	clk_USB = '0;
 	#41.7ns;
@@ -70,10 +70,10 @@ task write_i2c_stop();
 	
     #2 $display($time,": I2C Stop");
 endtask
-//bit [17:0] cmpa_target = {14'h134,3'h1,1'b0};
-bit [17:0] cmpa_target = {14'h134,3'h2,1'b0};
+//bit [18:0] cmpa_target = {15'h134,3'h1,1'b0};
+bit [18:0] cmpa_target = {15'h134,3'h2,1'b0};
 initial begin
-	#10us;
+/*	#10us;
 	write_i2c_start();
 	write_i2c_data(8'b10100100);
 	write_i2c_data(8'h00);
@@ -96,6 +96,6 @@ initial begin
 	write_i2c_data(8'b10100100);
 	write_i2c_data(8'h03);
 	write_i2c_data(8'h0);
-	write_i2c_stop();
+	write_i2c_stop();*/
 end
 endmodule

@@ -4,9 +4,9 @@
   (keywordMap (keywordLevel 0))
   (status
     (written
-      (timestamp 2019 4 26 22 12 15)
+      (timestamp 2019 4 27 18 46 8)
       (program "SCUBA" (version "Diamond (64-bit) 3.10.3.144"))))
-      (comment "C:\lscc\diamond\3.10_x64\ispfpga\bin\nt64\scuba.exe -w -n pllImpl -lang verilog -synth synplify -arch xo2c00 -type pll -fin 12 -fclkop 160 -fclkop_tol 10.0 -trimp 0 -phasep 0 -trimp_r -phase_cntl STATIC -rst -fb_mode 1 -lock ")
+      (comment "C:\lscc\diamond\3.10_x64\ispfpga\bin\nt64\scuba.exe -w -n pllImpl -lang verilog -synth synplify -arch xo2c00 -type pll -fin 19 -fclkop 190 -fclkop_tol 10.0 -trimp 0 -phasep 0 -trimp_r -phase_cntl STATIC -rst -fb_mode 1 -lock ")
   (library ORCLIB
     (edifLevel 0)
     (technology
@@ -219,7 +219,7 @@
             (property CLKOS_ENABLE
               (string "DISABLED"))
             (property FREQUENCY_PIN_CLKOP
-              (string "156.000000"))
+              (string "190.000000"))
             (property OUTDIVIDER_MUXA2
               (string "DIVA"))
             (property PREDIVIDER_MUXA1
@@ -229,9 +229,9 @@
             (property CLKOP_ENABLE
               (string "ENABLED"))
             (property FREQUENCY_PIN_CLKI
-              (string "12.000000"))
+              (string "19.000000"))
             (property ICP_CURRENT
-              (string "7"))
+              (string "8"))
             (property LPF_RESISTOR
               (string "8"))
             (property CLKOS3_DIV
@@ -243,7 +243,7 @@
             (property CLKOP_DIV
               (string "3"))
             (property CLKFB_DIV
-              (string "13"))
+              (string "10"))
             (property CLKI_DIV
               (string "1"))
             (property FEEDBK_PATH

@@ -19,13 +19,13 @@ wire [7:0] data_in = 8'h0;
 wire [7:0] data_out;
 wire ready = 1'b1; // Assume we're fast enough to be always ready
 
-wire i2c_start, i2c_stop, r_w, data_vld;
+wire i2c_start, i2c_stop, i2c_data_vld;
 wire i2c_start_s, i2c_stop_s, i2c_data_vld_s;
 sync2 SYNC_START(.clk, .d(i2c_start), .q(i2c_start_s));
 sync2 SYNC_STOP(.clk, .d(i2c_stop), .q(i2c_stop_s));
 sync2 SYNC_VLD(.clk, .d(i2c_data_vld), .q(i2c_data_vld_s));
 
-i2c_slave #(.I2C_SLAVE_ADDR(7'b1010010)) i2cSlave_impl (.XRESET(rst), .start(i2c_start), .stop(i2c_stop), .data_vld(i2c_data_vld), .* );
+i2c_slave #(.I2C_SLAVE_ADDR(7'b1010010)) i2cSlave_impl (.XRESET(rst), .start(i2c_start), .stop(i2c_stop), .data_vld(i2c_data_vld), .r_w(), .* );
 
 reg [2:0] state, state_next;
 reg [REGBITS-1:0] regAddr_next;

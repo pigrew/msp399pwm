@@ -1,32 +1,38 @@
-module top (
+module top
+#(parameter PWMWIDTH=20)
+(
 	input wire clk_USB,
-	input wire PushBn,
+//	input wire PushBn,
 	// UART
-	input   uart_rx,
-	output  uart_tx,
+//	input   uart_rx,
+//	output  uart_tx,
 
 	// SPI
-	output  wire spi_sclk, spi_csn, spi_mosi,
-	input   wire spi_miso,
-	
+//	output  wire spi_sclk, spi_csn, spi_mosi,
+//	input   wire spi_miso,
+	output rst_out,
+	output wire d0_out,
 	// I2C Slave?
 	inout   scl,
 	inout   sda,
-	output  I2CAlert, //TEMP SIGNAL
+//	output  I2CAlert, //TEMP SIGNAL
 	
 	output wire pwm0, pwm1
 )
  /* synthesis syn_hier = "flatten" */;
+ /************** Clocks ***************/
 wire pllLock;
 wire clk8, clk8s, clk1d;
+wire clk_osc;
+OSCH #(.NOM_FREQ("19.0")) osc(.STDBY(1'b0), .OSC(clk_osc), .SEDSTDBY());
 
-pllImpl __ (.CLKI(clk_USB), .RST(~PushBn), .CLKOP(clk8),.LOCK(pllLock));
-assign spi_csn = 1'b1;
+pllImpl __pll (.CLKI(clk_osc), .RST(1'b0), .CLKOP(clk8),.LOCK(pllLock));
+/*assign spi_csn = 1'b1;
 assign spi_sclk = 1'b1;
 assign I2CAlert=1'b1;
 assign spi_mosi = spi_miso;
 assign uart_tx = uart_rx;
-
+*/
 wire [7:0] pwm0D;
 wire [7:0] pwm1D;
 
@@ -37,10 +43,12 @@ assign rst = ~pllLock;
 ECLKSYNCA eclksa (.ECLKI(clk8), .STOP(1'b0), .ECLKO(clk8s));
 
 CLKDIVC #(.DIV("4.0")) divddr  (.RST(rst), .CLKI(clk8s), .ALIGNWD(1'b0), .CDIV1(), .CDIVX(clk1d) );
-
+assign rst_out = rst;
+wire tb_dbg;
+assign d0_out = tb_dbg;
 /************ PWM ****************/
-reg [17:0] cmpa, cmpa_scratch;
-pwm pwmA( .clk(clk1d), .rst(rst), .cmpA(cmpa), .pwm0D(pwm0D), .pwm1D(pwm1D));
+reg [PWMWIDTH-1:0] cmpa, cmpa_scratch;
+pwm #(.WIDTH(PWMWIDTH), .PERIOD(16'hFFFF)) pwmA( .clk(clk1d), .rst(rst), .cmpA(cmpa), .pwm0D(pwm0D), .pwm1D(pwm1D), .tb_dbg);
 
 wire buf_pwm0, buf_pwm1;
 
@@ -70,8 +78,8 @@ wire regDataValid;
 
 always @(posedge clk1d, posedge rst) begin
 	if(rst) begin
-		cmpa <= {14'h134,3'h1,1'b0};
-		cmpa_scratch <= {14'h134,3'h1,1'b0};
+		cmpa <= {16'ha000,3'h1,1'b0};
+		cmpa_scratch <= {16'h134,3'h1,1'b0};
 	end else begin
 		if(regDataValid) begin
 			case(regAddr)
@@ -80,7 +88,7 @@ always @(posedge clk1d, posedge rst) begin
 				3'd1:
 					cmpa_scratch[15:8] <= regData;
 				3'd2:
-					cmpa_scratch[17:16] <= regData;
+					cmpa_scratch[PWMWIDTH-1:16] <= regData;
 				3'd3:
 					cmpa <= cmpa_scratch;
 			endcase

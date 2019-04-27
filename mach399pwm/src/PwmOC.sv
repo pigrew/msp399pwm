@@ -22,7 +22,7 @@ always_ff @(posedge clk, posedge rst) begin
 	if(rst) begin
 		pwmD <= '1;
 		x <= '1;
-		cmpL_int <= cmpL;
+		cmpL_int <= 'd50;
 		//cmpH <= '0;
 		//cmpL <= 'h7;
 	end else begin
@@ -46,7 +46,7 @@ always_comb begin
 		cmpL_int_next = cmpL;
 	end else if (tb == cmpL_int[WIDTH-2:HRBITS]) begin
 		x_next = '0;
-		pwmD_next = {((1<<HRBITS)){1'b1}} >> ((1<<HRBITS) - cmpL[HRBITS-1:0]);
+		pwmD_next = {((1<<HRBITS)){1'b1}} >> ((1<<HRBITS) - cmpL_int[HRBITS-1:0]);
 	end
 end
 
