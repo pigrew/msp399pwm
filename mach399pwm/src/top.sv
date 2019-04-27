@@ -9,11 +9,10 @@ module top (
 	output  wire spi_sclk, spi_csn, spi_mosi,
 	input   wire spi_miso,
 	
-	// I2C
+	// I2C Slave?
 	inout   scl,
 	inout   sda,
 	output  I2CAlert, //TEMP SIGNAL
-
 	
 	output wire pwm0, pwm1
 )
@@ -22,9 +21,6 @@ wire pllLock;
 wire clk8, clk8s, clk1d;
 
 pllImpl __ (.CLKI(clk_USB), .RST(~PushBn), .CLKOP(clk8),.LOCK(pllLock));
-
-assign scl = 1'b1;
-assign sda = 1'b1;
 assign spi_csn = 1'b1;
 assign spi_sclk = 1'b1;
 assign I2CAlert=1'b1;
@@ -34,13 +30,17 @@ assign uart_tx = uart_rx;
 wire [7:0] pwm0D;
 wire [7:0] pwm1D;
 
-wire rst;assign rst = ~pllLock;
+wire rst;
+assign rst = ~pllLock;
 
-pwm pwmA( .clk(clk1d), .rst(rst), .cmpA({14'h134,3'h1,1'b0}), .pwm0D(pwm0D), .pwm1D(pwm1D));
-
+/************** CLK Dividers ************/
 ECLKSYNCA eclksa (.ECLKI(clk8), .STOP(1'b0), .ECLKO(clk8s));
 
 CLKDIVC #(.DIV("4.0")) divddr  (.RST(rst), .CLKI(clk8s), .ALIGNWD(1'b0), .CDIV1(), .CDIVX(clk1d) );
+
+/************ PWM ****************/
+reg [17:0] cmpa, cmpa_scratch;
+pwm pwmA( .clk(clk1d), .rst(rst), .cmpA(cmpa), .pwm0D(pwm0D), .pwm1D(pwm1D));
 
 wire buf_pwm0, buf_pwm1;
 
@@ -60,4 +60,38 @@ ODDRX4B opwm1 (
 	.D0(pwm1D[0]), .D1(pwm1D[1]), .D2(pwm1D[2]), .D3(pwm1D[3]),
 	.D4(pwm1D[4]), .D5(pwm1D[5]), .D6(pwm1D[6]), .D7(pwm1D[7])
 	);
+	
+/**************** I2C *****************/
+wire scl_oe, scl_in;
+wire sda_oe, sda_in;
+wire [2:0] regAddr;
+wire [7:0] regData;
+wire regDataValid;
+
+always @(posedge clk1d, posedge rst) begin
+	if(rst) begin
+		cmpa <= {14'h134,3'h1,1'b0};
+		cmpa_scratch <= {14'h134,3'h1,1'b0};
+	end else begin
+		if(regDataValid) begin
+			case(regAddr)
+				3'd0:
+					cmpa_scratch[7:0] <= regData;
+				3'd1:
+					cmpa_scratch[15:8] <= regData;
+				3'd2:
+					cmpa_scratch[17:16] <= regData;
+				3'd3:
+					cmpa <= cmpa_scratch;
+			endcase
+		end
+	end
+end
+
+i2cregif #(.REGBITS(3)) i2cregifImpl(
+	.clk(clk1d), .rst, .regAddr, .regData, .regDataValid,
+	.scl_oe, .scl_in, .sda_oe, .sda_in);
+	
+BBPU i2c_scl_bbpu (.I(1'b0), .T(~scl_oe), .O(scl_in), .B(scl));
+BBPU i2c_sda_bbpu (.I(1'b0), .T(~sda_oe), .O(sda_in), .B(sda));
 endmodule
