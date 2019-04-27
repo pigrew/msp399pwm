@@ -1,8 +1,8 @@
 ###==== BEGIN Header
 
 # Synopsys, Inc. constraint file
-# C:/Users/nconrad/Documents/Lattice/PicoPWM/pciopwm.fdc
-# Written on Mon Apr 22 11:39:19 2019
+# C:/Users/nconrad/msp399pwm/mach399pwm/pciopwm.fdc
+# Written on Fri Apr 26 22:14:01 2019
 # by Synplify Pro (R), M-2017.03L-SP1-1 FDC Constraint Editor
 
 # Custom constraint commands may be added outside of the SCOPE tab sections bounded with BEGIN/END.
@@ -14,8 +14,10 @@
 
 ###==== BEGIN Clocks - (Populated from tab in SCOPE, do not edit)
 create_clock  -name {clk_USB} {p:clk_USB} -period {83.333} -waveform {0 41}
-create_clock  -name {clkb} {n:__.CLKOP} -period {6.9444} -waveform {0 3.5}
+create_clock  -name {clk_clk1d} {n:clk1d} -period {25.6} -waveform {0 12.8}
+create_clock  -name {clk_clk8} {n:__.CLKOP} -period {6.41} -waveform {0 3.2}
 
 ###==== END Clocks
+
 
 

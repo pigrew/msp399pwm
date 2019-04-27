@@ -8,3 +8,5 @@ impl*/
 *_tcr.dir
 reportview.xml
 promote.xml
+pn*.dmp
+*_rpt.htm

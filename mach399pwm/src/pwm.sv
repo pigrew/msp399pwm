@@ -1,26 +1,27 @@
 module pwm
 #(
-parameter WIDTH = 18
+parameter WIDTH = 18,
+parameter HRBITS = 3
 )
 (
 input wire clk,
 input wire rst,
-output wire pwm0I,
-output wire pwm0Q,
-output wire pwm1I,
-output wire pwm1Q
+output wire [(1<<HRBITS)-1:0] pwm0D,
+output wire [(1<<HRBITS)-1:0] pwm1D
 );
-reg [WIDTH-1:0] tb;
-reg [WIDTH-1:0] tb_next;
 
-reg [WIDTH-1:0] prd, prd_next;  // PRD is this number, plus 1
-pwmOC  #(.WIDTH(WIDTH) )OC0(.clk(clk), .rst(rst), .tb(tb), .pwmI(pwm0I), .pwmQ(pwm0Q), .cmpH('h0), .cmpL('h5));
+reg [WIDTH-HRBITS-1:0] tb;
+reg [WIDTH-HRBITS-1:0] tb_next;
 
-pwmOC #(.WIDTH(WIDTH) ) OC1(.clk(clk), .rst(rst), .tb(tb), .pwmI(pwm1I), .pwmQ(pwm1Q), .cmpH('h4), .cmpL('h3));
+reg [WIDTH-HRBITS-1:0] prd, prd_next;  // PRD is this number, plus 1
+
+pwmOC #(.WIDTH(WIDTH), .HRBITS(3)) OC0(.clk(clk), .rst(rst), .tb(tb), .pwmD(pwm0D), .cmpH('h0), .cmpL('h2D709));
+
+pwmOC #(.WIDTH(WIDTH), .HRBITS(3)) OC1(.clk(clk), .rst(rst), .tb(tb), .pwmD(pwm1D), .cmpH('h20000), .cmpL('hD709));
 
 always_ff @(posedge clk, posedge rst) begin
 	if(rst) begin
-		prd <= 'h00008;
+		prd <= 'h3ffff;
 		tb <= 1'b0;
 	end else begin
 		tb <= tb_next;
