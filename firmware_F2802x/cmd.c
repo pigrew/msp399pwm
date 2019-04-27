@@ -32,7 +32,7 @@ uint16_t cmd_available() {
     return cmdComplete;
 }
 void processCmds() {
-    char str[8];
+    char str[10];
     uint32_t d32;
     uint16_t rsp = 0; // 0 is success
 
@@ -85,9 +85,17 @@ void processCmds() {
             break;
         case 'x': // Set PWM ratio
         case 'X':
-            d32 = atoul((char*)&(rxbuf[1]));
-            if(d32 >= 3)
-                pwm_applyWhole(d32);
+            if(rxbuf[1] == '?') {
+                uart_write("X",1);
+                u16hex(EPwm1Regs.CMPA.all,str,32);
+                uart_write(str,8);
+                uart_write("\n",1);
+                rsp = 3;
+            } else {
+                d32 = atoul((char*)&(rxbuf[1]));
+                if(d32 >= 3)
+                    pwm_applyWhole(d32);
+            }
             break;
         case 'y': // Set PWM ratio
         case 'Y':
