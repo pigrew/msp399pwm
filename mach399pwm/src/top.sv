@@ -34,13 +34,13 @@ assign uart_tx = uart_rx;
 wire [7:0] pwm0D;
 wire [7:0] pwm1D;
 
-wire rst;assign rst = ~pllLock;
+wire rst;assign rst = ~pllLock;
 
-pwm pwmA( .clk(clk1d), .rst(rst), .pwm0D(pwm0D), .pwm1D(pwm1D));
+pwm pwmA( .clk(clk1d), .rst(rst), .cmpA({14'h134,3'h1,1'b0}), .pwm0D(pwm0D), .pwm1D(pwm1D));
 
 ECLKSYNCA eclksa (.ECLKI(clk8), .STOP(1'b0), .ECLKO(clk8s));
 
-CLKDIVC #(.DIV("4.0")) divddr  (.RST(rst), .CLKI(clk8s), .ALIGNWD(1'b0), .CDIVX(clk1d) );
+CLKDIVC #(.DIV("4.0")) divddr  (.RST(rst), .CLKI(clk8s), .ALIGNWD(1'b0), .CDIV1(), .CDIVX(clk1d) );
 
 wire buf_pwm0, buf_pwm1;
 
@@ -60,7 +60,4 @@ ODDRX4B opwm1 (
 	.D0(pwm1D[0]), .D1(pwm1D[1]), .D2(pwm1D[2]), .D3(pwm1D[3]),
 	.D4(pwm1D[4]), .D5(pwm1D[5]), .D6(pwm1D[6]), .D7(pwm1D[7])
 	);
-
-	//ODDRXE opwm0 (.SCLK(clkb), .RST(rst), .D0(pwm0I), .D1(pwm0Q), .Q(pwm0));
-//ODDRXE opwm1 (.SCLK(clkb), .RST(rst), .D0(pwm1I), .D1(pwm1Q), .Q(pwm1));
 endmodule

@@ -6,10 +6,10 @@ HRBITS=3
 (
 input wire clk,
 input wire rst,
-input wire [WIDTH-HRBITS-1:0] tb,
+input wire [WIDTH-HRBITS-1-1:0] tb,
 output reg [(1<<HRBITS)-1:0] pwmD,
-input wire [WIDTH-1:0] cmpL,
-input wire [WIDTH-1:0] cmpH
+input wire [WIDTH-2:0] cmpL,
+input wire [WIDTH-2:0] cmpH
 );
 
 /*reg [WIDTH-1:0] cmpH, cmpH_next;
@@ -35,12 +35,12 @@ always_comb begin
 	pwmD_next = {(1<<HRBITS){x}};
 	//cmpH_next = cmpH;
 	//cmpL_next = cmpL;
-	if(tb==cmpH[WIDTH-1:HRBITS]) begin
+	if(tb==cmpH[WIDTH-2:HRBITS]) begin
 		x_next = '1;
-		pwmD_next = {((1<<HRBITS)-1){1'b1}} >> cmpH[HRBITS-1:0];
-	end else if (tb == cmpL[WIDTH-1:HRBITS]) begin
+		pwmD_next = {((1<<HRBITS)){1'b1}} << cmpH[HRBITS-1:0];
+	end else if (tb == cmpL[WIDTH-2:HRBITS]) begin
 		x_next = '0;
-		pwmD_next = {((1<<HRBITS)-1){1'b1}} << ((1<<HRBITS) - cmpL[HRBITS-1:0]);
+		pwmD_next = {((1<<HRBITS)){1'b1}} >> ((1<<HRBITS) - cmpL[HRBITS-1:0]);
 	end
 end
 
