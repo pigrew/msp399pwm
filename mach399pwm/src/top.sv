@@ -26,7 +26,7 @@ wire clk8, clk8s, clk1d;
 wire clk_osc;
 OSCH #(.NOM_FREQ("19.0")) osc(.STDBY(1'b0), .OSC(clk_osc), .SEDSTDBY());
 
-pllImpl __pll (.CLKI(clk_osc), .RST(1'b0), .CLKOP(clk8),.LOCK(pllLock));
+pllImpl __pll (.CLKI(clk_USB), .RST(1'b0), .CLKOP(clk8),.LOCK(pllLock));
 /*assign spi_csn = 1'b1;
 assign spi_sclk = 1'b1;
 assign I2CAlert=1'b1;
@@ -43,9 +43,9 @@ assign rst = ~pllLock;
 ECLKSYNCA eclksa (.ECLKI(clk8), .STOP(1'b0), .ECLKO(clk8s));
 
 CLKDIVC #(.DIV("4.0")) divddr  (.RST(rst), .CLKI(clk8s), .ALIGNWD(1'b0), .CDIV1(), .CDIVX(clk1d) );
-assign rst_out = rst;
+assign rst_out = 1'b0;
 wire tb_dbg;
-assign d0_out = tb_dbg;
+assign d0_out = 1'b0;
 /************ PWM ****************/
 reg [PWMWIDTH-1:0] cmpa, cmpa_scratch;
 pwm #(.WIDTH(PWMWIDTH), .PERIOD(16'hFFFF)) pwmA( .clk(clk1d), .rst(rst), .cmpA(cmpa), .pwm0D(pwm0D), .pwm1D(pwm1D), .tb_dbg);

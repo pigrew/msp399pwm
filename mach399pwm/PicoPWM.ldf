@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<BaliProject version="3.2" title="PicoPWM" device="LCMXO2-1200ZE-2MG132C" default_implementation="impl1">
+<BaliProject version="3.2" title="PicoPWM" device="LCMXO2-7000HE-4TG144C" default_implementation="impl1">
     <Options/>
     <Implementation title="impl1" dir="impl1" description="impl1" synthesis="synplify" default_strategy="Strategy1">
         <Options top="top"/>
@@ -18,7 +18,13 @@
         <Source name="src/top.sv" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
-        <Source name="src/ipx/ddrImpl.ipx" type="IPX_Module" type_short="IPX">
+        <Source name="src/i2c_slave.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="src/i2cregif.sv" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="src/sync2.sv" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
         <Source name="impl1/impl1.xcf" type="Programming Project File" type_short="Programming">

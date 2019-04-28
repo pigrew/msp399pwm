@@ -11,9 +11,9 @@
 ###==== END Header
 
 
-#create_clock  -name {clk_USB} {p:clk_USB} -period {83.333} -waveform {0 41}
+#create_clock  -name {clk_osc} {n:clk_osc} -period {52.6} -waveform {0 26}
 ###==== BEGIN Clocks - (Populated from tab in SCOPE, do not edit)
-create_clock  -name {clk_osc} {n:clk_osc} -period {52.6} -waveform {0 26}
+create_clock  -name {clk_USB} {p:clk_USB} -period {12.5} -waveform {0 6.25}
 create_clock  -name {scl} {n:scl_in} -period {1000.000ns} -waveform {250.000 750.000}
 create_clock  -name {sda} {n:sda_in} -period {1000.000ns} -waveform {0.000 500.000}
 
@@ -26,7 +26,7 @@ create_clock  -name {sda} {n:sda_in} -period {1000.000ns} -waveform {0.000 500.0
 
 
 ###==== BEGIN "Generated Clocks" - (Populated from tab in SCOPE, do not edit)
-create_generated_clock  -name {clk8} -source {n:clk_osc} {n:clk8} -master_clock {c:clk_osc} -multiply_by {10}
+create_generated_clock  -name {clk8} -source {n:clk_USB} {n:clk8} -master_clock {c:clk_USB} -multiply_by {2.5}
 create_generated_clock  -name {clk1d} -source {n:clk8} {n:clk1d} -master_clock {c:clk8} -divide_by {4}
 ###==== END "Generated Clocks"
 

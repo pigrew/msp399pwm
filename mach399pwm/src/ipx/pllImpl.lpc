@@ -17,7 +17,7 @@ ModuleName=pllImpl
 SourceFormat=Verilog HDL
 ParameterFileVersion=1.0
 Date=04/27/2019
-Time=18:46:08
+Time=19:26:03
 
 [Parameters]
 Verilog=1
@@ -28,12 +28,12 @@ Expression=None
 Order=None
 IO=0
 mode=Frequency
-CLKI=19
-CLKI_DIV=1
-BW=1.719
-VCO=570.000
+CLKI=80
+CLKI_DIV=2
+BW=3.820
+VCO=600.000
 fb_mode=CLKOP
-CLKFB_DIV=10
+CLKFB_DIV=5
 FRACN_ENABLE=0
 FRACN_DIV=0
 DynamicPhase=STATIC
@@ -50,9 +50,9 @@ WBProt=0
 OPBypass=0
 OPUseDiv=0
 CLKOP_DIV=3
-FREQ_PIN_CLKOP=190
+FREQ_PIN_CLKOP=200
 OP_Tol=10.0
-CLKOP_AFREQ=190.000000
+CLKOP_AFREQ=200.000000
 CLKOP_PHASEADJ=0
 CLKOP_TRIM_POL=Rising
 CLKOP_TRIM_DELAY=0
@@ -84,4 +84,4 @@ CLKOS3_AFREQ=
 CLKOS3_PHASEADJ=0
 
 [Command]
-cmd_line= -w -n pllImpl -lang verilog -synth synplify -arch xo2c00 -type pll -fin 19 -fclkop 190 -fclkop_tol 10.0 -trimp 0 -phasep 0 -trimp_r -phase_cntl STATIC -rst -fb_mode 1 -lock
+cmd_line= -w -n pllImpl -lang verilog -synth synplify -arch xo2c00 -type pll -fin 80 -fclkop 200 -fclkop_tol 10.0 -trimp 0 -phasep 0 -trimp_r -phase_cntl STATIC -rst -fb_mode 1 -lock
