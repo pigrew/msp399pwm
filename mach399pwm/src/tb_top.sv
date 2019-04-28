@@ -11,6 +11,7 @@ wire scl, sda;
 wire I2CAlert;
 wire pwm0, pwm1;
 wire clk_out;
+wire rst_out, d0_out;
 always begin
 	clk_USB = '0;
 	#41.7ns;

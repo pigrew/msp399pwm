@@ -1,6 +1,6 @@
 module pwm
 #(
-parameter WIDTH = 20, // width of CMPA, which is prd_bits + HRBITS + 1 (dual bit)
+parameter WIDTH = 20, // width of CMPA, which is prd_bits + HRBITS
 parameter HRBITS = 3,
 parameter PERIOD = 'hff
 // And one dual bit
@@ -14,17 +14,16 @@ output wire [(1<<HRBITS)-1:0] pwm1D,
 output wire tb_dbg
 );
 
-reg [WIDTH-HRBITS-2:0] tb;
-reg [WIDTH-HRBITS-2:0] tb_next;
+reg [WIDTH-HRBITS-1:0] tb;
+reg [WIDTH-HRBITS-1:0] tb_next;
+reg [WIDTH-HRBITS-1:0] prd, prd_next;  // PRD is this number, plus 1
 
-reg [WIDTH-HRBITS-2:0] prd, prd_next;  // PRD is this number, plus 1
-
-reg [WIDTH-HRBITS-2:0] midPrd;
-reg [WIDTH-2:0] cmpL1;
+reg [WIDTH-HRBITS-1:0] midPrd;
+reg [WIDTH-1:0] cmpL1;
 
 pwmOC #(.WIDTH(WIDTH), .HRBITS(3)) OC0(.clk(clk), .rst(rst), .tb(tb), .pwmD(pwm0D),
 	.cmpH('0),
-	.cmpL(cmpA[WIDTH-1:1]));
+	.cmpL(cmpA[WIDTH-1:0]));
 
 pwmOC #(.WIDTH(WIDTH), .HRBITS(3)) OC1(.clk(clk), .rst(rst), .tb(tb), .pwmD(pwm1D), .cmpH( {{HRBITS{1'b0}},midPrd}<<HRBITS),
 	.cmpL(cmpL1));
@@ -32,7 +31,7 @@ pwmOC #(.WIDTH(WIDTH), .HRBITS(3)) OC1(.clk(clk), .rst(rst), .tb(tb), .pwmD(pwm1
 assign tb_dbg = tb[5];
 always_comb begin 
 	midPrd = (prd>>1) + 'd1;
-	cmpL1 = ({midPrd,{HRBITS{1'b0}}})+cmpA[WIDTH-1:1]+cmpA[0];
+	cmpL1 = ({midPrd,{HRBITS{1'b0}}})+cmpA[WIDTH-1:0];
 	if(cmpL1 > {prd,{HRBITS{1'b0}}}) begin
 		cmpL1 = cmpL1 - ({prd,{HRBITS{1'b0}}});
 	end

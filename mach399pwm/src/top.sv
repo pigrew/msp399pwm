@@ -1,5 +1,5 @@
 module top
-#(parameter PWMWIDTH=20)
+#(parameter PWMWIDTH=19)
 (
 	input wire clk_USB,
 //	input wire PushBn,
@@ -78,8 +78,8 @@ wire regDataValid;
 
 always @(posedge clk1d, posedge rst) begin
 	if(rst) begin
-		cmpa <= {16'ha000,3'h1,1'b0};
-		cmpa_scratch <= {16'h134,3'h1,1'b0};
+		cmpa <= {16'ha000,3'h1};
+		cmpa_scratch <= {16'ha000,3'h1};
 	end else begin
 		if(regDataValid) begin
 			case(regAddr)

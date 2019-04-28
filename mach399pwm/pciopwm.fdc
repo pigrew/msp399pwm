@@ -2,7 +2,7 @@
 
 # Synopsys, Inc. constraint file
 # C:/Users/nconrad/msp399pwm/mach399pwm/pciopwm.fdc
-# Written on Sat Apr 27 19:19:55 2019
+# Written on Sat Apr 27 22:07:30 2019
 # by Synplify Pro (R), M-2017.03L-SP1-1 FDC Constraint Editor
 
 # Custom constraint commands may be added outside of the SCOPE tab sections bounded with BEGIN/END.
@@ -16,6 +16,7 @@
 create_clock  -name {clk_USB} {p:clk_USB} -period {12.5} -waveform {0 6.25}
 create_clock  -name {scl} {n:scl_in} -period {1000.000ns} -waveform {250.000 750.000}
 create_clock  -name {sda} {n:sda_in} -period {1000.000ns} -waveform {0.000 500.000}
+create_clock  -name {clk8s} {n:clk8s} -period {5} -waveform {0 2.5}
 
 ###==== END Clocks
 
@@ -23,11 +24,12 @@ create_clock  -name {sda} {n:sda_in} -period {1000.000ns} -waveform {0.000 500.0
 
 
 
+#
+#
 
 
 ###==== BEGIN "Generated Clocks" - (Populated from tab in SCOPE, do not edit)
-create_generated_clock  -name {clk8} -source {n:clk_USB} {n:clk8} -master_clock {c:clk_USB} -multiply_by {2.5}
-create_generated_clock  -name {clk1d} -source {n:clk8} {n:clk1d} -master_clock {c:clk8} -divide_by {4}
+create_generated_clock  -name {clk1d} -source {n:clk8s} {n:clk1d} -master_clock {c:clk8s} -divide_by {4}
 ###==== END "Generated Clocks"
 
 
@@ -43,4 +45,6 @@ set_false_path  -from {c:scl} -to {c:sda}
 set_false_path  -from {c:scl} -to {c:scl}
 set_false_path  -from {c:sda} -to {c:scl}
 ###==== END "Delay Paths"
+
+
 
