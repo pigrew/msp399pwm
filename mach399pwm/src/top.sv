@@ -17,10 +17,12 @@ module top
 	inout   sda,
 //	output  I2CAlert, //TEMP SIGNAL
 	
-	output wire pwm0, pwm1
+	output wire pwm0, pwm1,
+	output wire clkEn
 )
  /* synthesis syn_hier = "flatten" */;
  /************** Clocks ***************/
+assign clkEn = 1'b1;
 wire pllLock;
 wire clk8, clk8s, clk1d;
 wire clk_osc;
@@ -78,8 +80,8 @@ wire regDataValid;
 
 always @(posedge clk1d, posedge rst) begin
 	if(rst) begin
-		cmpa <= {16'ha000,3'h1};
-		cmpa_scratch <= {16'ha000,3'h1};
+		cmpa <= {16'ha000,3'h3};
+		cmpa_scratch <= {16'ha000,3'h3};
 	end else begin
 		if(regDataValid) begin
 			case(regAddr)
