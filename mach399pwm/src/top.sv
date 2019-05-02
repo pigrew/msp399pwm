@@ -1,5 +1,7 @@
 module top
-#(parameter PWMWIDTH=19)
+#(
+parameter PWMWIDTH=19,
+parameter DSBITS=5)
 (
 	input wire clk_USB,
 //	input wire PushBn,
@@ -50,7 +52,11 @@ wire tb_dbg;
 assign d0_out = 1'b0;
 /************ PWM ****************/
 reg [PWMWIDTH-1:0] cmpa, cmpa_scratch;
-pwm #(.WIDTH(PWMWIDTH), .PERIOD(16'hFFFF)) pwmA( .clk(clk1d), .rst(rst), .cmpA(cmpa), .pwm0D(pwm0D), .pwm1D(pwm1D), .tb_dbg);
+reg [7:0] dsFrac, dsFrac_scratch;
+
+pwm #(.WIDTH(PWMWIDTH), .DSBITS(DSBITS), .PERIOD(16'h0010))pwmA (
+	.clk(clk1d), .rst(rst),
+	.cmpA(cmpa), .ds_fraction(dsFrac[DSBITS-1:0]), .pwm0D(pwm0D), .pwm1D(pwm1D), .tb_dbg);
 
 wire buf_pwm0, buf_pwm1;
 
@@ -82,6 +88,7 @@ always @(posedge clk1d, posedge rst) begin
 	if(rst) begin
 		cmpa <= {16'ha000,3'h3};
 		cmpa_scratch <= {16'ha000,3'h3};
+		dsFrac <= 8'h12;
 	end else begin
 		if(regDataValid) begin
 			case(regAddr)
@@ -92,7 +99,11 @@ always @(posedge clk1d, posedge rst) begin
 				3'd2:
 					cmpa_scratch[PWMWIDTH-1:16] <= regData;
 				3'd3:
+					dsFrac_scratch <= regData;
+				3'd4: begin
 					cmpa <= cmpa_scratch;
+					dsFrac <= dsFrac_scratch;
+				end
 			endcase
 		end
 	end

@@ -12,10 +12,12 @@ wire I2CAlert;
 wire pwm0, pwm1;
 wire clk_out;
 wire rst_out, d0_out;
+wire clkEn; // active low clock enable?
+
 always begin
-	clk_USB = '0;
+	clk_USB = 1'b0 & clkEn;
 	#41.7ns;
-	clk_USB = '1;
+	clk_USB = 1'b1 & clkEn;
 	#41.7ns;
 end
 
@@ -23,15 +25,16 @@ PUR PUR_INST(.PUR(1'b1));
 GSR GSR_INST(.GSR(1'b1));
 
 top DUT (.*);
+// 1 MHz fast-mode-plus?
 
 reg scl_reg='z, sda_reg='z;
 assign scl = scl_reg;
 assign sda = sda_reg;
 task write_i2c_start();
 	int j;
-    #(clk_cycle/4);
+    #1us;
     sda_reg <= 1'b0;
-    #(clk_cycle/4);
+    #260ns; // t_HD;STA
     scl_reg <= 1'b0;
 	#(clk_cycle/4);
     #2 $display($time,": I2C start");
@@ -52,7 +55,6 @@ task write_i2c_data(input   [7:0]   data);
 	#(clk_cycle/4);
     scl_reg = 1'bz;
 	#(clk_cycle/4);
-    scl_reg = 1'bz;
 	if(sda)
 		@(negedge sda);
 	#(clk_cycle/4);
@@ -74,7 +76,7 @@ endtask
 //bit [18:0] cmpa_target = {15'h134,3'h1,1'b0};
 bit [18:0] cmpa_target = {15'h134,3'h2,1'b0};
 initial begin
-/*	#10us;
+	#10us;
 	write_i2c_start();
 	write_i2c_data(8'b10100100);
 	write_i2c_data(8'h00);
@@ -97,6 +99,6 @@ initial begin
 	write_i2c_data(8'b10100100);
 	write_i2c_data(8'h03);
 	write_i2c_data(8'h0);
-	write_i2c_stop();*/
+	write_i2c_stop();
 end
 endmodule
