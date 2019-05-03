@@ -27,6 +27,15 @@
         <Source name="src/sync2.sv" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
+        <Source name="src/deltasigma.sv" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="src/tb_deltasigma.sv" type="Verilog" type_short="Verilog" syn_sim="SimOnly">
+            <Options/>
+        </Source>
+        <Source name="src/twister.sv" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
         <Source name="impl1/impl1.xcf" type="Programming Project File" type_short="Programming">
             <Options/>
         </Source>

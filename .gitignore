@@ -57,3 +57,5 @@ __pycache__
 org.eclipse.cdt.codan.core.prefs
 org.eclipse.cdt.debug.core.prefs
 org.eclipse.core.resources.prefs
+*_tcl.html
+*.log

@@ -1,7 +1,7 @@
 module top
 #(
 parameter PWMWIDTH=19,
-parameter DSBITS=5)
+parameter DSBITS=8)
 (
 	input wire clk_USB,
 //	input wire PushBn,
@@ -20,7 +20,8 @@ parameter DSBITS=5)
 //	output  I2CAlert, //TEMP SIGNAL
 	
 	output wire pwm0, pwm1,
-	output wire clkEn
+	output wire clkEn,
+	output wire [7:0] LED
 )
  /* synthesis syn_hier = "flatten" */;
  /************** Clocks ***************/
@@ -53,8 +54,11 @@ assign d0_out = 1'b0;
 /************ PWM ****************/
 reg [PWMWIDTH-1:0] cmpa, cmpa_scratch;
 reg [7:0] dsFrac, dsFrac_scratch;
+reg dirty;
+assign LED[7:1] ='1;
+assign LED[0] = ~dirty;
 
-pwm #(.WIDTH(PWMWIDTH), .DSBITS(DSBITS), .PERIOD(16'h0010))pwmA (
+pwm #(.WIDTH(PWMWIDTH), .DSBITS(DSBITS), .PERIOD(16'hFFFF))pwmA (
 	.clk(clk1d), .rst(rst),
 	.cmpA(cmpa), .ds_fraction(dsFrac[DSBITS-1:0]), .pwm0D(pwm0D), .pwm1D(pwm1D), .tb_dbg);
 
@@ -86,23 +90,32 @@ wire regDataValid;
 
 always @(posedge clk1d, posedge rst) begin
 	if(rst) begin
-		cmpa <= {16'ha000,3'h3};
-		cmpa_scratch <= {16'ha000,3'h3};
+		cmpa <= {16'ha000,3'h5};
+		cmpa_scratch <= {16'ha000,3'h5};
 		dsFrac <= 8'h12;
 	end else begin
 		if(regDataValid) begin
 			case(regAddr)
-				3'd0:
+				3'd0: begin
 					cmpa_scratch[7:0] <= regData;
-				3'd1:
+					dirty <= '1;
+				end
+				3'd1: begin
 					cmpa_scratch[15:8] <= regData;
-				3'd2:
+					dirty <= '1;
+				end
+				3'd2: begin
 					cmpa_scratch[PWMWIDTH-1:16] <= regData;
-				3'd3:
+					dirty <= '1;
+				end
+				3'd3: begin
 					dsFrac_scratch <= regData;
+					dirty <= '1;
+				end
 				3'd4: begin
 					cmpa <= cmpa_scratch;
 					dsFrac <= dsFrac_scratch;
+					dirty <= '0;
 				end
 			endcase
 		end
